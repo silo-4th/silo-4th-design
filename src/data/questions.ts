@@ -1,3 +1,5 @@
+import { MORE_QUESTIONS } from "./moreQuestions";
+
 export type ErrorTag = "개념 부족" | "개념 혼동" | "조건 누락" | "실행 순서 오류" | "암기 오류" | "찍어서 맞힘" | "낮은 확신";
 
 export type Option = { text: string; tag?: ErrorTag; why?: string };
@@ -342,7 +344,7 @@ const PRACTICE: Question[] = [
   },
 ];
 
-QUESTIONS.push(...PRACTICE);
+QUESTIONS.push(...PRACTICE, ...MORE_QUESTIONS);
 
 export function questionsFor(concept: string) {
   return QUESTIONS.filter((q) => q.concept === concept);

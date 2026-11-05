@@ -29,6 +29,19 @@ export function Reader({
   const ref = useRef<HTMLDivElement>(null);
   const [sel, setSel] = useState<{ x: number; y: number; text: string; section: string } | null>(null);
 
+  // Moving to another lecture always starts from the top of its material
+  // (except the first load, when a ?section= link asks for a specific spot).
+  const firstMaterial = useRef(true);
+  useEffect(() => {
+    if (firstMaterial.current) {
+      firstMaterial.current = false;
+      if (scrollTo) return;
+    }
+    ref.current?.scrollTo({ top: 0 });
+    setSel(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [material.id]);
+
   useEffect(() => {
     if (!scrollTo) return;
     document.getElementById(`sec-${scrollTo.id}`)?.scrollIntoView({ behavior: scrollTo.n === 0 ? "auto" : "smooth", block: "start" });
@@ -138,7 +151,7 @@ function BlockView({ b }: { b: Block }) {
     case "h2":
       return <h2>{b.text}</h2>;
     case "h3":
-      return <h3 className="reader-h3">{b.text}</h3>;
+      return <h3 className="reader-h3"><Inline text={b.text} /></h3>;
     case "p":
       return <p><Inline text={b.text} /></p>;
     case "ul":

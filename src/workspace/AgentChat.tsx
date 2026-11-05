@@ -122,7 +122,7 @@ export function AgentChat({ material, section, command }: { material: Material; 
         <div className="chat">
           {msgs.length === 0 && (
             <div className="welcome">
-              <Mascot size={88} />
+              <Mascot size={112} live />
               <p className="welcome-hi">{state.user ? `${firstName(state.user.name)}님, ` : "반가워요! "}저와 함께 쉽게 공부해요!</p>
               <h3 className="welcome-title">오늘은 무엇부터 해볼까요?</h3>
               <div className="quick-grid">

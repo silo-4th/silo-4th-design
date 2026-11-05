@@ -1,7 +1,8 @@
 import { ChevronLeft, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Mascot } from "../components/Brand";
-import { QuizCard, tagChipClass, type QuizResult } from "../components/QuizCard";
+import { Burst } from "../components/Burst";
+import { QuizCard, tagChipClass, type QuizCta, type QuizResult } from "../components/QuizCard";
 import { CONCEPTS, type Material, type Section } from "../data/materials";
 import { getQuestion, type QuestionType } from "../data/questions";
 import { detectConcept } from "../lib/agent";
@@ -99,6 +100,7 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
     dispatch({ type: "quiz", materialId: material.id, session: { set, i, results, retry, phase } });
   }, [set, i, results, retry, phase, material.id, dispatch]);
   const [answered, setAnswered] = useState(false);
+  const [cta, setCta] = useState<QuizCta>(null);
   const [round, setRound] = useState(0);
 
   if (reviewing) {
@@ -131,7 +133,7 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
     return (
       <div className="panel-body" style={{ padding: 20 }}>
         <div className="quiz-done">
-          <Mascot size={72} mood={ok === results.length ? "wow" : "smile"} />
+          <Burst><Mascot size={96} live mood={ok === results.length ? "wow" : "smile"} /></Burst>
           <h3>{retry ? "다시 풀기를 마쳤어요!" : `확인 문제 ${results.length}개를 모두 풀었어요!`}</h3>
           <p className="muted">{ok === results.length ? "전부 맞혔어요. 이 흐름 그대로 다음 단원으로 가도 좋아요." : "헷갈린 문제는 내일 같은 원리의 새 문제로 다시 나와요."}</p>
           <div className="quiz-score">
@@ -171,39 +173,44 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
   const pct = Math.round((done / set.length) * 100);
   const last = i === set.length - 1;
 
+  const next = () => {
+    setAnswered(false);
+    if (last) setPhase("done");
+    else setI(i + 1);
+  };
+  // One button right under the card: submit while answering, then next / results once graded.
+  const bar = answered
+    ? { label: last ? "결과 보기" : "다음 문제", disabled: false, run: next }
+    : cta ?? { label: "위에서 답을 어떻게 골랐는지 선택해 주세요", disabled: true, run: () => {} };
+
   return (
-    <div className="panel-body" style={{ padding: 20 }}>
-      <QuizCard
-        key={`${qid}-${round}-${i}`}
-        className="quiz-card"
-        qid={qid}
-        source="check"
-        top={
-          <>
-            <div className="quiz-strip" role="progressbar" aria-label="문제 진행" aria-valuemin={0} aria-valuemax={set.length} aria-valuenow={done}>
-              <i style={{ width: `${pct}%` }} />
-            </div>
-            <span className="quiz-count">{retry && "다시 "}{Math.min(i + 1, set.length)} / {set.length}</span>
-          </>
-        }
-        onAnswered={(r) => {
-          setResults((rs) => [...rs, r]);
-          setAnswered(true);
-        }}
-      />
-      {answered && (
-        <button
-          className="btn btn-primary btn-block"
-          style={{ marginTop: 12 }}
-          onClick={() => {
-            setAnswered(false);
-            if (last) setPhase("done");
-            else setI(i + 1);
+    <>
+      <div className="panel-body" style={{ padding: 20 }}>
+        <QuizCard
+          key={`${qid}-${round}-${i}`}
+          className="quiz-card"
+          qid={qid}
+          source="check"
+          onCta={setCta}
+          top={
+            <>
+              <div className="quiz-strip" role="progressbar" aria-label="문제 진행" aria-valuemin={0} aria-valuemax={set.length} aria-valuenow={done}>
+                <i style={{ width: `${pct}%` }} />
+              </div>
+              <span className="quiz-count">{retry && "다시 "}{Math.min(i + 1, set.length)} / {set.length}</span>
+            </>
+          }
+          onAnswered={(r) => {
+            setResults((rs) => [...rs, r]);
+            setAnswered(true);
           }}
-        >
-          {last ? "결과 보기" : "다음 문제"}
-        </button>
-      )}
-    </div>
+        />
+        <div className="quiz-cta">
+          <button className={`btn btn-block ${bar.disabled ? "" : "btn-primary"}`} disabled={bar.disabled} onClick={bar.run}>
+            {bar.label}
+          </button>
+        </div>
+      </div>
+    </>
   );
 }

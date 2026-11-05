@@ -4,10 +4,8 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { MATERIALS, type Material } from "../data/materials";
 
-/** Cover colour per unit. */
-const COVER: Record<string, string> = { groupby: "#00a760", join: "#1b1c1d" };
 
-const UPCOMING = [{ title: "서브쿼리와 집합 연산자" }, { title: "윈도우 함수" }, { title: "데이터 모델링의 이해" }];
+const UPCOMING = [{ title: "데이터 모델링의 이해" }];
 
 /** Hamburger in the dark top bar: a dark side rail of unit covers, like page thumbnails, the current one framed. */
 export function UnitMenu({ material }: { material: Material }) {
@@ -45,7 +43,6 @@ export function UnitMenu({ material }: { material: Material }) {
             <div className="unit-rail-body">
               {MATERIALS.map((m, n) => {
                 const here = m.id === material.id;
-                const cover = COVER[m.id] ?? "#3e4042";
                 return (
                   <button
                     key={m.id}
@@ -56,7 +53,7 @@ export function UnitMenu({ material }: { material: Material }) {
                       if (!here) nav(`/learn/${m.id}`);
                     }}
                   >
-                    <span className="unit-cover" style={{ background: cover }}>
+                    <span className="unit-cover">
                       <span className="unit-cover-title">{n + 1}. {m.title}</span>
                       <span className="unit-meta">{m.subject} · 약 {m.minutes}분</span>
                     </span>

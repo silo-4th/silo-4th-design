@@ -1,3 +1,5 @@
+import { MORE_MATERIALS } from "./moreMaterials";
+
 export type Block =
   | { kind: "h2"; text: string }
   | { kind: "h3"; text: string }
@@ -39,6 +41,18 @@ export const CONCEPTS: Record<string, { name: string; material: string }> = {
   inner_join: { name: "INNER JOIN", material: "join" },
   outer_join: { name: "OUTER JOIN", material: "join" },
   join_order: { name: "JOIN과 WHERE 적용 순서", material: "join" },
+  sq_return: { name: "서브쿼리 반환 결과", material: "subquery" },
+  sq_position: { name: "서브쿼리 위치와 뷰", material: "subquery" },
+  sq_corr: { name: "연관 서브쿼리와 EXISTS", material: "subquery" },
+  sq_notin: { name: "NOT IN과 NULL", material: "subquery" },
+  gf_rollup: { name: "ROLLUP과 인자 순서", material: "groupfn" },
+  gf_cube: { name: "CUBE와 GROUPING SETS", material: "groupfn" },
+  gf_pick: { name: "결과표로 그룹 함수 고르기", material: "groupfn" },
+  gf_grouping: { name: "GROUPING 함수", material: "groupfn" },
+  wf_rank: { name: "순위 함수", material: "window" },
+  wf_frame: { name: "집계 윈도우 함수와 프레임", material: "window" },
+  wf_order: { name: "행 순서 함수", material: "window" },
+  wf_ratio: { name: "비율 함수", material: "window" },
 };
 
 const EMP_TABLE: Block = {
@@ -288,6 +302,8 @@ export const MATERIALS: Material[] = [
     ],
   },
 ];
+
+MATERIALS.push(...MORE_MATERIALS);
 
 export function getMaterial(id: string) {
   return MATERIALS.find((m) => m.id === id);

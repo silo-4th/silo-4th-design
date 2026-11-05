@@ -2,6 +2,7 @@ import { Menu, SquarePen, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, useParams, useSearchParams } from "react-router-dom";
 import { Mascot } from "../components/Brand";
+import { UserMenu } from "../components/UserMenu";
 import { useToast } from "../components/Toast";
 import { getMaterial } from "../data/materials";
 import { useStore } from "../store";
@@ -43,6 +44,14 @@ export function Workspace() {
     const t = window.setInterval(() => document.visibilityState === "visible" && dispatch({ type: "tick", minutes: 1 }), 60_000);
     return () => window.clearInterval(t);
   }, [dispatch]);
+
+  // A new lecture starts at its intro section.
+  const prevId = useRef(id);
+  useEffect(() => {
+    if (prevId.current === id) return;
+    prevId.current = id;
+    setActive("intro");
+  }, [id]);
 
   useEffect(() => {
     if (material) dispatch({ type: "read", materialId: material.id, sectionId: active });
@@ -92,11 +101,7 @@ export function Workspace() {
           <UnitMenu material={material} />
           <span className="title">{material.title}</span>
           <div className="right">
-            {!open && (
-              <button className="tbtn" onClick={() => setOpen(true)}>
-                <Mascot size={18} /><span className="lbl">AI 패널 열기</span>
-              </button>
-            )}
+            <UserMenu />
           </div>
         </header>
 
@@ -109,6 +114,16 @@ export function Workspace() {
             onSelectAction={onSelect}
           />
         </div>
+
+        {/* Panel closed: the sprout peeks in from the top-right edge; click it to open the AI panel. */}
+        {!open && (
+          <button className="peek" aria-label="AI 패널 열기" onClick={() => setOpen(true)}>
+            <span className="peek-bubble" aria-hidden>궁금한 거 있어?</span>
+            <span className="peek-clip">
+              <span className="peek-body"><Mascot size={104} /></span>
+            </span>
+          </button>
+        )}
       </div>
 
       {open && (

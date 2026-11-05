@@ -2,17 +2,16 @@ import { Check, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleMark, Mascot } from "../components/Brand";
-import { useStore } from "../store";
-import { HOME } from "../App";
+import { DEFAULT_HANDLE, useStore } from "../store";
 
 export function Login() {
   const { state, dispatch } = useStore();
   const nav = useNavigate();
-  const [name, setName] = useState("조하늘");
+  const [name, setName] = useState(DEFAULT_HANDLE);
 
   const start = () => {
-    dispatch({ type: "login", name: name.trim() || "학습자" });
-    nav(state.setup ? HOME : "/setup");
+    dispatch({ type: "login", name: name.trim() || DEFAULT_HANDLE });
+    nav(state.setup ? "/recall" : "/setup");
   };
 
   return (
@@ -51,7 +50,7 @@ export function Login() {
         </p>
         <p className="muted" style={{ margin: "0 0 28px", maxWidth: 420 }}>AI가 설명만 하고 끝나지 않아요. 내가 혼자 풀 수 있을 때까지 도움을 조금씩 줄여가요.</p>
         <div className="field" style={{ maxWidth: 380 }}>
-          <label htmlFor="name">이름</label>
+          <label htmlFor="name">별명</label>
           <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && start()} />
         </div>
         <button className="google-btn" style={{ maxWidth: 380 }} onClick={start}>

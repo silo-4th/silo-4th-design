@@ -44,7 +44,8 @@ export type QuizSession = {
 export type SavedChat = { id: string; materialId: string; at: number; messages: ChatMsg[] };
 
 type State = {
-  user: { name: string } | null;
+  /** handle = the ID shown next to the avatar */
+  user: { name: string; handle?: string } | null;
   setup: { dailyMinutes: number; diagnosed: boolean } | null;
   attempts: Attempt[];
   reviews: Review[];
@@ -56,6 +57,8 @@ type State = {
   quiz: Record<string, QuizSession>;
   minutes: Record<string, number>;
   lastMaterial?: { id: string; section: string };
+  /** day (todayKey) the 꺼내 보기 check was finished or put off — it shows at most once a day */
+  recallDay?: string;
 };
 
 type Action =
@@ -72,6 +75,7 @@ type Action =
   | { type: "quiz"; materialId: string; session: QuizSession }
   | { type: "openChat"; id: string }
   | { type: "tick"; minutes: number }
+  | { type: "recallDay" }
   | { type: "reset" };
 
 const KEY = "sprout-state-v1";
@@ -116,10 +120,14 @@ function schedule(reviews: Review[], a: Attempt): Review[] {
   return [...rest, { ...prev, step, due: a.at + INTERVALS[step] * DAY }];
 }
 
+/** Default nickname (shown next to the avatar); also used for older saved logins that have none. */
+export const DEFAULT_HANDLE = "늘보";
+
 function reducer(s: State, a: Action): State {
   switch (a.type) {
     case "login":
-      return { ...s, user: { name: a.name } };
+      // for now every fresh login shows 꺼내 보기 again (clears today's "done / put off" mark)
+      return { ...s, user: { name: a.name, handle: a.name }, recallDay: undefined };
     case "logout":
       return { ...s, user: null };
     case "setup":
@@ -171,6 +179,8 @@ function reducer(s: State, a: Action): State {
       const k = todayKey();
       return { ...s, minutes: { ...s.minutes, [k]: (s.minutes[k] ?? 0) + a.minutes } };
     }
+    case "recallDay":
+      return { ...s, recallDay: todayKey() };
     case "reset":
       return { ...initial, user: s.user };
   }

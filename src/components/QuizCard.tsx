@@ -1,8 +1,11 @@
 import { Check, CircleDashed, Lightbulb, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { CONCEPTS } from "../data/materials";
 import { getQuestion, type ErrorTag, type Question } from "../data/questions";
 import { tagFor, useStore, type Confidence, type Source } from "../store";
+
+/** The card's main action, handed to a host that shows it as a fixed button below the card. */
+export type QuizCta = { label: string; disabled: boolean; run: () => void } | null;
 
 export type QuizResult = { qid: string; correct: boolean; confidence: Confidence; tag?: ErrorTag; why?: string };
 
@@ -27,6 +30,7 @@ export function QuizCard({
   className = "",
   footer,
   top,
+  onCta,
   onAnswered,
 }: {
   qid: string;
@@ -38,13 +42,15 @@ export function QuizCard({
   footer?: (r: QuizResult) => ReactNode;
   /** Shown inside the card above the question, e.g. set progress. */
   top?: ReactNode;
+  /** When given, the card hides its own submit button and reports it here instead. */
+  onCta?: (cta: QuizCta) => void;
   onAnswered?: (r: QuizResult) => void;
 }) {
   const q = getQuestion(qid)!;
   if (q.type === "빈칸" || q.type === "대화형") {
-    return <WrittenCard q={q} source={source} reviewOf={reviewOf} hints={hints} showExplain={showExplain} className={className} footer={footer} top={top} onAnswered={onAnswered} />;
+    return <WrittenCard q={q} source={source} reviewOf={reviewOf} hints={hints} showExplain={showExplain} className={className} footer={footer} top={top} onCta={onCta} onAnswered={onAnswered} />;
   }
-  return <ChoiceCard q={q} source={source} reviewOf={reviewOf} hints={hints} showExplain={showExplain} className={className} footer={footer} top={top} onAnswered={onAnswered} />;
+  return <ChoiceCard q={q} source={source} reviewOf={reviewOf} hints={hints} showExplain={showExplain} className={className} footer={footer} top={top} onCta={onCta} onAnswered={onAnswered} />;
 }
 
 type CardProps = {
@@ -57,6 +63,7 @@ type CardProps = {
   footer?: (r: QuizResult) => ReactNode;
   /** Shown inside the card above the question, e.g. set progress. */
   top?: ReactNode;
+  onCta?: (cta: QuizCta) => void;
   onAnswered?: (r: QuizResult) => void;
 };
 
@@ -86,10 +93,10 @@ function CardHead({ q }: { q: Question }) {
 function Hints({ q, n }: { q: Question; n: number }) {
   return (
     <>
-      {q.hints.slice(0, n).map((h, i) => (
+      {q.hints.slice(0, Math.min(n, 1)).map((h, i) => (
         <div className="hint" key={i}>
           <Lightbulb size={15} style={{ flex: "none", marginTop: 1 }} />
-          <span><b>힌트 {i + 1}</b> · {h}</span>
+          <span><b>힌트</b> · {h}</span>
         </div>
       ))}
     </>
@@ -98,10 +105,12 @@ function Hints({ q, n }: { q: Question; n: number }) {
 
 function HintButton({ n, onMore }: { n: number; onMore: () => void }) {
   return (
-    <button className="btn btn-sm btn-soft" disabled={n >= 2} onClick={onMore}>
-      <Lightbulb size={14} />
-      {n === 0 ? "힌트 받기" : n === 1 ? "힌트 하나 더" : "힌트를 모두 봤어요"}
-    </button>
+    n >= 1 ? null : (
+      <button className="btn btn-sm btn-soft" onClick={onMore}>
+        <Lightbulb size={14} />
+        힌트 받기
+      </button>
+    )
   );
 }
 
@@ -120,13 +129,19 @@ function ResultBanner({ result }: { result: QuizResult }) {
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, "");
 
 /** 빈칸 grades the typed word; 대화형 compares the learner's explanation with key points, then lets them judge. */
-function WrittenCard({ q, source, reviewOf, hints, showExplain, className, footer, top, onAnswered }: CardProps) {
+function WrittenCard({ q, source, reviewOf, hints, showExplain, className, footer, top, onCta, onAnswered }: CardProps) {
   const { dispatch } = useStore();
   const [text, setText] = useState("");
   const [stage, setStage] = useState<"write" | "check" | "confidence" | "done">("write");
   const [hintN, setHintN] = useState(0);
   const [result, setResult] = useState<QuizResult | null>(null);
   const talk = q.type === "대화형";
+
+  const empty = !text.trim();
+  useEffect(() => {
+    if (!onCta) return;
+    onCta(stage === "write" ? { label: talk ? "설명 제출" : "답 제출", disabled: empty, run: () => setStage(talk ? "check" : "confidence") } : null);
+  }, [onCta, stage, empty, talk]);
   const typedRight = !talk && !!q.blank?.some((a) => norm(text).includes(norm(a)));
   const covered = talk ? (q.talk ?? []).map((p) => p.keywords.some((k) => norm(text).includes(norm(k)))) : [];
 
@@ -175,9 +190,11 @@ function WrittenCard({ q, source, reviewOf, hints, showExplain, className, foote
       {stage === "write" && (
         <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
           {hints && <HintButton n={hintN} onMore={() => setHintN((n) => n + 1)} />}
-          <button className="btn btn-sm btn-dark" style={{ marginLeft: "auto" }} disabled={!text.trim()} onClick={() => setStage(talk ? "check" : "confidence")}>
-            {talk ? "설명 제출" : "답 제출"}
-          </button>
+          {!onCta && (
+            <button className="btn btn-sm btn-dark" style={{ marginLeft: "auto" }} disabled={!text.trim()} onClick={() => setStage(talk ? "check" : "confidence")}>
+              {talk ? "설명 제출" : "답 제출"}
+            </button>
+          )}
         </div>
       )}
 
@@ -244,11 +261,15 @@ function WrittenCard({ q, source, reviewOf, hints, showExplain, className, foote
   );
 }
 
-function ChoiceCard({ q, source, reviewOf, hints, showExplain, className, footer, top, onAnswered }: CardProps) {
+function ChoiceCard({ q, source, reviewOf, hints, showExplain, className, footer, top, onCta, onAnswered }: CardProps) {
   const qid = q.id;
   const { dispatch } = useStore();
   const [picked, setPicked] = useState<number | null>(null);
   const [stage, setStage] = useState<"pick" | "confidence" | "done">("pick");
+  useEffect(() => {
+    if (!onCta) return;
+    onCta(stage === "pick" ? { label: "답 제출", disabled: picked === null, run: () => setStage("confidence") } : null);
+  }, [onCta, stage, picked]);
   const [hintN, setHintN] = useState(0);
   const [result, setResult] = useState<QuizResult | null>(null);
 
@@ -292,9 +313,11 @@ function ChoiceCard({ q, source, reviewOf, hints, showExplain, className, footer
       {stage === "pick" && (
         <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
           {hints && <HintButton n={hintN} onMore={() => setHintN((n) => n + 1)} />}
-          <button className="btn btn-sm btn-dark" style={{ marginLeft: "auto" }} disabled={picked === null} onClick={() => setStage("confidence")}>
-            답 제출
-          </button>
+          {!onCta && (
+            <button className="btn btn-sm btn-dark" style={{ marginLeft: "auto" }} disabled={picked === null} onClick={() => setStage("confidence")}>
+              답 제출
+            </button>
+          )}
         </div>
       )}
 

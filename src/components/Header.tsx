@@ -1,24 +1,23 @@
-import { Bell, Grid3x3, Globe, LogOut } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "../store";
-import { Logo } from "./Brand";
+import { AvatarFace, Logo } from "./Brand";
 import { HOME } from "../App";
 
 export function Header() {
   const { state, dispatch } = useStore();
   const nav = useNavigate();
+  // the login screen is "before login": no avatar there, even if an old session is still saved
+  const onLogin = useLocation().pathname === "/login";
+  const user = onLogin ? null : state.user;
   return (
     <header className="gnb">
       <div className="gnb-main">
-        <Link to={state.user ? HOME : "/login"} aria-label="홈">
+        <Link to={user ? HOME : "/login"} aria-label="홈">
           <Logo />
         </Link>
         <div className="gnb-right">
-          {state.user ? (
+          {user ? (
             <>
-              <button className="icon-btn" aria-label="서비스"><Grid3x3 size={16} /></button>
-              <button className="icon-btn" aria-label="언어"><Globe size={16} /></button>
-              <button className="icon-btn" aria-label="알림"><Bell size={16} /><span className="dot" /></button>
               <button
                 className="avatar"
                 title="로그아웃"
@@ -27,12 +26,10 @@ export function Header() {
                   nav("/login");
                 }}
               >
-                {state.user.name[0]}
+                <AvatarFace />
               </button>
             </>
-          ) : (
-            <Link className="btn btn-sm" to="/login"><LogOut size={14} />로그인</Link>
-          )}
+          ) : null}
         </div>
       </div>
     </header>

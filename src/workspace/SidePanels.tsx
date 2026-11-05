@@ -1,6 +1,7 @@
 import { AlertTriangle, BookMarked, ChevronRight, Lightbulb, RotateCcw, Target, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Mascot } from "../components/Brand";
+import { Burst } from "../components/Burst";
 import { QuizCard, type QuizResult } from "../components/QuizCard";
 import { useToast } from "../components/Toast";
 import { CONCEPTS, type Material, type Section } from "../data/materials";
@@ -106,7 +107,7 @@ export function ReviewTab({ preset }: { preset?: string }) {
     const wrong = session.filter((_, k) => !results[k]?.correct).map((s) => state.reviews.find((r) => r.qid === s.review.qid)).filter(Boolean) as Review[];
     return (
       <div className="panel-body" style={{ padding: 28, textAlign: "center" }}>
-        <Mascot size={80} mood={ok === results.length ? "wow" : "smile"} />
+        <Burst><Mascot size={96} live mood={ok === results.length ? "wow" : "smile"} /></Burst>
         <h3 style={{ margin: "14px 0 18px", fontSize: 18 }}>복습 {session.length}문제를 모두 풀었어요!</h3>
         <div style={{ background: "var(--bg)", borderRadius: 8, padding: 16, margin: "0 auto 18px", maxWidth: 220 }}>
           <div className="subtle">복습 점수</div>

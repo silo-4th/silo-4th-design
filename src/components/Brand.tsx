@@ -1,32 +1,32 @@
-/** Pixel-art sprout buddy used as the AI agent's face. */
-export function Mascot({ size = 96, mood = "smile" }: { size?: number; mood?: "smile" | "wow" | "think" }) {
-  const px = [
-    "....xxxx....",
-    "..xxxxxxxx..",
-    ".xxxxxxxxxx.",
-    "xxxxxxxxxxxx",
-    "xxxxxxxxxxxx",
-    "xxxxxxxxxxxx",
-    "xxxxxxxxxxxx",
-    "xxxxxxxxxxxx",
-    ".xxxxxxxxxx.",
-    "..xxxxxxxx..",
-  ];
-  const mouth = mood === "wow" ? [[5, 7], [6, 7]] : mood === "think" ? [[5, 7], [6, 7], [7, 7]] : [[4, 6], [5, 7], [6, 7], [7, 6]];
+import mascotUrl from "../assets/mascot.png";
+
+/**
+ * Sprout buddy used as the AI agent's face.
+ * `live` = hop, breathe and blink (agent main screen); `spin` = hop with a full turn (quiz screens).
+ * Without either, small mascots get a gentle bob.
+ * `mood` is kept for existing call sites; the artwork is the same for every mood.
+ */
+export function Mascot({ size = 96, live = false, spin = false }: { size?: number; mood?: "smile" | "wow" | "think"; live?: boolean; spin?: boolean }) {
+  const motion = spin ? "mascot mascot--spin" : live ? "mascot mascot--live" : "mascot";
+  const big = live || spin;
   return (
-    <svg width={size} height={size * 1.0} viewBox="-1 -3 14 14" aria-hidden shapeRendering="crispEdges">
-      <rect x="5" y="-3" width="1" height="2" fill="#2fae5f" />
-      <rect x="6" y="-2" width="2" height="1" fill="#2fae5f" />
-      {px.flatMap((row, y) => [...row].map((c, x) => (c === "x" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={(x + y) % 5 === 0 ? "#6fd66a" : "#7ddc72"} /> : null)))}
-      <rect x="3" y="4" width="1" height="1" fill="#1b1c1d" />
-      <rect x="8" y="4" width="1" height="1" fill="#1b1c1d" />
-      {mouth.map(([x, y]) => (
-        <rect key={`m${x}${y}`} x={x} y={y} width="1" height="1" fill="#1b1c1d" />
-      ))}
-      <rect x="2" y="5" width="1" height="1" fill="#f6a7a0" opacity="0.6" />
-      <rect x="9" y="5" width="1" height="1" fill="#f6a7a0" opacity="0.6" />
-    </svg>
+    <span className={motion} style={{ width: size, height: size }} aria-hidden>
+      {big ? (
+        <span className="mascot-body">
+          <img src={mascotUrl} width={size} height={size} alt="" draggable={false} />
+          <i className="mascot-lid l" />
+          <i className="mascot-lid r" />
+        </span>
+      ) : (
+        <img src={mascotUrl} width={size} height={size} alt="" draggable={false} />
+      )}
+    </span>
   );
+}
+
+/** Close-up of the sprout's face, used as the signed-in user's avatar (fills its round parent). */
+export function AvatarFace() {
+  return <img className="avatar-face" src={mascotUrl} alt="" draggable={false} />;
 }
 
 export function Logo() {
