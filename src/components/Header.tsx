@@ -1,7 +1,6 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "../store";
 import { AvatarFace, Logo } from "./Brand";
-import { HOME } from "../App";
 
 export function Header() {
   const { state, dispatch } = useStore();
@@ -12,9 +11,8 @@ export function Header() {
   return (
     <header className="gnb">
       <div className="gnb-main">
-        <Link to={user ? HOME : "/login"} aria-label="홈">
-          <Logo />
-        </Link>
+        {/* logo is just the brand mark: clicking it does nothing */}
+        <Logo />
         <div className="gnb-right">
           {user ? (
             <>

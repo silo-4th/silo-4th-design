@@ -1,24 +1,40 @@
 import mascotUrl from "../assets/mascot.png";
+import turnUrl from "../assets/mascot-turn.webp";
 
 /**
  * Sprout buddy used as the AI agent's face.
  * `live` = hop, breathe and blink (agent main screen); `spin` = hop with a full turn (quiz screens).
  * Without either, small mascots get a gentle bob.
+ * The spin uses the character turnaround sheet: 8 frames (front → 3/4 → side → back → other side → front,
+ * the second half mirrored) that swap while it jumps, so it really turns instead of flipping a flat card.
  * `mood` is kept for existing call sites; the artwork is the same for every mood.
  */
 export function Mascot({ size = 96, live = false, spin = false }: { size?: number; mood?: "smile" | "wow" | "think"; live?: boolean; spin?: boolean }) {
   const motion = spin ? "mascot mascot--spin" : live ? "mascot mascot--live" : "mascot";
   const big = live || spin;
+  const src = mascotUrl;
+  if (spin) {
+    return (
+      <span className={motion} style={{ width: size, height: size }} aria-hidden>
+        <span className="mascot-body">
+          {/* stacking order matters: frames 1→7 each fade in over the previous, the front (0) sits on top */}
+          {[1, 2, 3, 4, 5, 6, 7, 0].map((k) => (
+            <span key={k} className={`mascot-turn f${k}`} style={{ backgroundImage: `url(${turnUrl})` }} />
+          ))}
+        </span>
+      </span>
+    );
+  }
   return (
     <span className={motion} style={{ width: size, height: size }} aria-hidden>
       {big ? (
         <span className="mascot-body">
-          <img src={mascotUrl} width={size} height={size} alt="" draggable={false} />
+          <img src={src} width={size} height={size} alt="" draggable={false} />
           <i className="mascot-lid l" />
           <i className="mascot-lid r" />
         </span>
       ) : (
-        <img src={mascotUrl} width={size} height={size} alt="" draggable={false} />
+        <img src={src} width={size} height={size} alt="" draggable={false} />
       )}
     </span>
   );

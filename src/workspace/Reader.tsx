@@ -1,5 +1,5 @@
-import { BookmarkPlus, GitCompare, HelpCircle, Lightbulb, Sparkles, Target } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { BookmarkPlus, Lightbulb, Sparkles, Target } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { type Block, type Material } from "../data/materials";
 
 export type SelAction = "easy" | "example" | "compare" | "point" | "check" | "note";
@@ -7,9 +7,7 @@ export type SelAction = "easy" | "example" | "compare" | "point" | "check" | "no
 const SEL_ACTIONS: { k: SelAction; label: string; icon: typeof Sparkles }[] = [
   { k: "easy", label: "쉽게 설명", icon: Sparkles },
   { k: "example", label: "예시 보기", icon: Lightbulb },
-  { k: "compare", label: "비교하기", icon: GitCompare },
   { k: "point", label: "시험 포인트", icon: Target },
-  { k: "check", label: "문제로 확인", icon: HelpCircle },
   { k: "note", label: "노트 저장", icon: BookmarkPlus },
 ];
 
@@ -27,7 +25,10 @@ export function Reader({
   onSelectAction: (a: SelAction, text: string, sectionId: string) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [sel, setSel] = useState<{ x: number; y: number; text: string; section: string } | null>(null);
+  const [sel, setSel] = useState<{ x: number; y: number; bottom: number; text: string; section: string } | null>(null);
+  // final popup position, kept fully inside the reader (never cut off at the edges)
+  const pop = useRef<HTMLDivElement>(null);
+  const [place, setPlace] = useState<{ left: number; top: number; below: boolean } | null>(null);
 
   // Moving to another lecture always starts from the top of its material
   // (except the first load, when a ?section= link asks for a specific spot).
@@ -71,11 +72,48 @@ export function Reader({
     if (!sec) return setSel(null);
     const r = range.getBoundingClientRect();
     const box = ref.current.getBoundingClientRect();
-    setSel({ x: r.left + r.width / 2 - box.left, y: r.top - box.top + ref.current.scrollTop - 8, text: text.slice(0, 400), section: sec.id.replace("sec-", "") });
+    setSel({
+      x: r.left + r.width / 2 - box.left,
+      y: r.top - box.top + ref.current.scrollTop - 8,
+      bottom: r.bottom - box.top + ref.current.scrollTop + 8,
+      text: text.slice(0, 1500), // room for a whole table
+      section: sec.id.replace("sec-", ""),
+    });
   };
 
+  // Double-clicking a table selects the whole table (not just one word), then shows the same popup.
+  const onDoubleClick = (e: React.MouseEvent) => {
+    const table = (e.target as HTMLElement).closest("table");
+    if (!table) return;
+    const range = document.createRange();
+    range.selectNodeContents(table);
+    const s = window.getSelection();
+    s?.removeAllRanges();
+    s?.addRange(range);
+    onMouseUp();
+  };
+
+  useLayoutEffect(() => {
+    if (!sel || !pop.current || !ref.current) return setPlace(null);
+    const root = ref.current;
+    const w = pop.current.offsetWidth;
+    const h = pop.current.offsetHeight;
+    const pad = 8;
+    // keep it within the text column (a little outdent allowed) so it never drifts to the far edge of
+    // the reader; only when the column is narrower than the popup fall back to the reader's own edges
+    const col = root.querySelector(".reader-inner") as HTMLElement | null;
+    const colL = col ? col.offsetLeft - 12 : pad;
+    const colR = col ? col.offsetLeft + col.offsetWidth + 12 : root.clientWidth - pad;
+    const [lo, hi] = colR - colL >= w ? [colL, colR - w] : [pad, Math.max(pad, root.clientWidth - w - pad)];
+    const left = Math.min(Math.max(sel.x - w / 2, lo), hi);
+    // not enough room above (sticky section tabs sit at the top) → show it under the selection
+    const tocH = (root.querySelector(".toc") as HTMLElement | null)?.offsetHeight ?? 0;
+    const below = sel.y - h < root.scrollTop + tocH + pad;
+    setPlace({ left, top: below ? sel.bottom : sel.y - h, below });
+  }, [sel]);
+
   return (
-    <div className="reader" ref={ref} onMouseUp={onMouseUp} onScroll={(e) => {
+    <div className="reader" ref={ref} onMouseUp={onMouseUp} onDoubleClick={onDoubleClick} onScroll={(e) => {
         if (sel) setSel(null);
         // The last section can never reach the top band, so treat "scrolled to the end" as reading it.
         const el = e.currentTarget;
@@ -108,7 +146,7 @@ export function Reader({
       </article>
 
       {sel && (
-        <div className="sel-pop" style={{ left: sel.x, top: sel.y }} onMouseUp={(e) => e.stopPropagation()}>
+        <div ref={pop} className="sel-pop" style={place ? { left: place.left, top: place.top } : { left: 0, top: 0, visibility: "hidden" }} onMouseUp={(e) => e.stopPropagation()}>
           {SEL_ACTIONS.map(({ k, label, icon: Icon }) => (
             <button
               key={k}

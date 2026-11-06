@@ -45,6 +45,15 @@ export function Workspace() {
     return () => window.clearInterval(t);
   }, [dispatch]);
 
+  // Entering a lecture opens the agent on its first (welcome) screen: the previous conversation
+  // is filed into 대화 기록, where it can be reopened. Runs once per lecture visit.
+  const freshFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (freshFor.current === id) return;
+    freshFor.current = id;
+    dispatch({ type: "newChat", materialId: id });
+  }, [id, dispatch]);
+
   // A new lecture starts at its intro section.
   const prevId = useRef(id);
   useEffect(() => {

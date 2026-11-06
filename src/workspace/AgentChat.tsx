@@ -1,6 +1,7 @@
-import { ArrowLeftRight, ArrowUp, BookmarkPlus, CheckCircle2, HelpCircle, Lightbulb, MessageCircleQuestion, RefreshCw, ScrollText, Sparkles, SquareCode, X } from "lucide-react";
+import { ArrowUp, BookmarkPlus, CheckCircle2, HelpCircle, Lightbulb, RefreshCw, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Mascot } from "../components/Brand";
+import { Icon3D } from "../components/Icon3D";
 import { QuizCard, tagChipClass, type QuizResult } from "../components/QuizCard";
 import { Rich } from "../components/Rich";
 import { useToast } from "../components/Toast";
@@ -33,10 +34,10 @@ export function pickQuestion(concept: string, attempts: Attempt[], types: Questi
 
 /** Quick actions on the empty chat: the title is sent as the question. */
 const QUICK = [
-  { title: "이 페이지 핵심만 알려줘", desc: "지금 구간을 3줄로", icon: ScrollText },
-  { title: "예시로 설명해줘", desc: "SQL 예제와 실행 결과로", icon: SquareCode },
-  { title: "내가 이해했는지 확인해줘", desc: "내 말로 답해 보기", icon: MessageCircleQuestion },
-  { title: "헷갈리는 개념 비교해줘", desc: "WHERE와 HAVING처럼", icon: ArrowLeftRight },
+  { title: "이 페이지 핵심만 알려줘", desc: "지금 구간을 3줄로", icon: "summary" as const },
+  { title: "예시로 설명해줘", desc: "SQL 예제와 실행 결과로", icon: "example" as const },
+  { title: "내가 이해했는지 확인해줘", desc: "내 말로 답해 보기", icon: "check" as const },
+  { title: "헷갈리는 개념 비교해줘", desc: "WHERE와 HAVING처럼", icon: "compare" as const },
 ];
 
 /** "조하늘" → "하늘": a friendlier greeting uses the given name when the full name has a surname in front. */
@@ -126,9 +127,9 @@ export function AgentChat({ material, section, command }: { material: Material; 
               <p className="welcome-hi">{state.user ? `${firstName(state.user.name)}님, ` : "반가워요! "}저와 함께 쉽게 공부해요!</p>
               <h3 className="welcome-title">오늘은 무엇부터 해볼까요?</h3>
               <div className="quick-grid">
-                {QUICK.map(({ title, desc, icon: Icon }) => (
+                {QUICK.map(({ title, desc, icon }) => (
                   <button key={title} className="quick-card" onClick={() => ask(title)}>
-                    <span className="quick-ico"><Icon size={22} strokeWidth={1.8} /></span>
+                    <span className="quick-ico"><Icon3D kind={icon} size={32} /></span>
                     <span className="quick-title">{title}</span>
                     <span className="quick-desc">{desc}</span>
                   </button>

@@ -182,7 +182,10 @@ export function Recall() {
 
 function introSub(items: Item[]) {
   const asked = items.filter((it) => it.asked).length;
-  return `질문 없이 넘어간 ${items.length - asked}개, 물어본 ${asked}개예요`;
+  const skipped = items.length - asked;
+  // leave out a part whose count is 0
+  const parts = [skipped > 0 && `질문 없이 넘어간 ${skipped}개`, asked > 0 && `물어본 ${asked}개`].filter(Boolean);
+  return `${parts.join(", ")}예요`;
 }
 
 function Intro({ items, onStart, onLater }: { items: Item[]; onStart: () => void; onLater: () => void }) {

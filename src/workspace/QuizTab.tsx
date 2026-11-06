@@ -133,7 +133,7 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
     return (
       <div className="panel-body" style={{ padding: 20 }}>
         <div className="quiz-done">
-          <Burst><Mascot size={96} live mood={ok === results.length ? "wow" : "smile"} /></Burst>
+          <Burst><Mascot size={96} spin mood={ok === results.length ? "wow" : "smile"} /></Burst>
           <h3>{retry ? "다시 풀기를 마쳤어요!" : `확인 문제 ${results.length}개를 모두 풀었어요!`}</h3>
           <p className="muted">{ok === results.length ? "전부 맞혔어요. 이 흐름 그대로 다음 단원으로 가도 좋아요." : "헷갈린 문제는 내일 같은 원리의 새 문제로 다시 나와요."}</p>
           <div className="quiz-score">
