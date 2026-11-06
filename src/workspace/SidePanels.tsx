@@ -14,7 +14,7 @@ export function SummaryTab({ material, onJump }: { material: Material; onJump: (
   const items = summaryOf(material);
   return (
     <div className="panel-body">
-      <div className="sum-block" style={{ background: "var(--bg)" }}>
+      <div className="sum-block" style={{ background: "var(--color-bg)" }}>
         <div className="subtle">요약만 보면 예외와 조건을 놓치기 쉬워요. 항목을 누르면 원문 구간으로 이동해요.</div>
       </div>
       <div className="sum-block">
@@ -109,7 +109,7 @@ export function ReviewTab({ preset }: { preset?: string }) {
       <div className="panel-body" style={{ padding: 28, textAlign: "center" }}>
         <Burst><Mascot size={96} live mood={ok === results.length ? "wow" : "smile"} /></Burst>
         <h3 style={{ margin: "14px 0 18px", fontSize: 18 }}>복습 {session.length}문제를 모두 풀었어요!</h3>
-        <div style={{ background: "var(--bg)", borderRadius: 8, padding: 16, margin: "0 auto 18px", maxWidth: 220 }}>
+        <div style={{ background: "var(--color-bg)", borderRadius: 8, padding: 16, margin: "0 auto 18px", maxWidth: 220 }}>
           <div className="subtle">복습 점수</div>
           <div><b style={{ fontSize: 26 }}>{ok}</b> <span className="muted">/{session.length}</span></div>
         </div>
@@ -124,7 +124,7 @@ export function ReviewTab({ preset }: { preset?: string }) {
 
   return (
     <div className="panel-body" style={{ padding: 20 }}>
-      <div className="card" style={{ background: "var(--green-25)", borderColor: "var(--green-50)" }}>
+      <div className="card" style={{ background: "var(--color-green-25)", borderColor: "var(--color-green-50)" }}>
         <div className="strong" style={{ fontSize: 15 }}>오늘 복습할 문제 {due.length}개</div>
         <div className="subtle" style={{ margin: "4px 0 12px" }}>틀렸거나 확신이 낮았던 문제를 1 · 3 · 7 · 14일 간격으로 다시 확인해요.</div>
         <button className="btn btn-primary btn-block" disabled={!due.length} onClick={() => start(due)}>
@@ -134,7 +134,7 @@ export function ReviewTab({ preset }: { preset?: string }) {
           <button className="btn btn-ghost btn-block btn-sm" style={{ marginTop: 6 }} onClick={() => start(upcoming)}>예정된 문제 미리 풀기</button>
         )}
       </div>
-      <h4 style={{ margin: "20px 0 8px", fontSize: 13, color: "var(--gray)" }}>복습 일정</h4>
+      <h4 style={{ margin: "20px 0 8px", fontSize: 13, color: "var(--color-gray)" }}>복습 일정</h4>
       {upcoming.length === 0 && <div className="empty">아직 복습할 문제가 없어요.<br />확인 문제를 풀면 자동으로 쌓여요.</div>}
       {upcoming.map((r) => {
         const d = Math.ceil((r.due - Date.now()) / 86_400_000);
@@ -171,14 +171,14 @@ export function NoteTab({ material, section }: { material: Material; section?: S
       </div>
       <div className="field" style={{ marginTop: 14 }}>
         <label>{section?.title ?? material.title}</label>
-        <textarea className="input" style={{ height: 96, padding: 12, resize: "none" }} placeholder="예) HAVING은 묶은 뒤 거르는 것, 집계 조건은 무조건 HAVING" value={text} onChange={(e) => setText(e.target.value)} />
+        <textarea className="input q-write" placeholder="예) HAVING은 묶은 뒤 거르는 것, 집계 조건은 무조건 HAVING" value={text} onChange={(e) => setText(e.target.value)} />
       </div>
       <button className="btn btn-dark btn-block" disabled={!text.trim()} onClick={save}>저장</button>
-      <h4 style={{ margin: "20px 0 8px", fontSize: 13, color: "var(--gray)" }}>이 자료의 노트 {notes.length}</h4>
+      <h4 style={{ margin: "20px 0 8px", fontSize: 13, color: "var(--color-gray)" }}>이 자료의 노트 {notes.length}</h4>
       {notes.map((n) => (
         <div className="list-row" key={n.id} style={{ alignItems: "flex-start" }}>
           <div className="grow">
-            {n.quote && <div className="subtle" style={{ borderLeft: "2px solid var(--green)", paddingLeft: 8, marginBottom: 4 }}>{n.quote}</div>}
+            {n.quote && <div className="subtle" style={{ borderLeft: "2px solid var(--color-green)", paddingLeft: 8, marginBottom: 4 }}>{n.quote}</div>}
             <div style={{ fontSize: 13.5 }}>{n.text}</div>
             <div className="subtle">{material.sections.find((s) => s.id === n.sectionId)?.title} · {timeAgo(n.at)}</div>
           </div>

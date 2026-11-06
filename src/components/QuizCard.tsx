@@ -10,10 +10,24 @@ export type QuizCta = { label: string; disabled: boolean; run: () => void } | nu
 export type QuizResult = { qid: string; correct: boolean; confidence: Confidence; tag?: ErrorTag; why?: string };
 
 const CONF: { v: Confidence; label: string }[] = [
-  { v: "sure", label: "확실히 알고 풀었어요" },
-  { v: "unsure", label: "두 선택지 중 고민했어요" },
-  { v: "guess", label: "잘 몰라서 추측했어요" },
+  { v: "sure", label: "확실해요" },
+  { v: "unsure", label: "애매해요" },
+  { v: "guess", label: "찍었어요" },
 ];
+
+/** Same chips as 꺼내 보기: one short question and three pills; picking one submits. */
+function ConfChips({ q, onPick }: { q: string; onPick: (c: Confidence) => void }) {
+  return (
+    <div className="recall-conf quiz-conf">
+      <span className="recall-conf-q">{q}</span>
+      {CONF.map((c) => (
+        <button key={c.v} className="recall-conf-chip" onClick={() => onPick(c.v)}>
+          {c.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function tagChipClass(tag?: ErrorTag) {
   if (!tag) return "chip-green";
@@ -224,25 +238,7 @@ function WrittenCard({ q, source, reviewOf, hints, showExplain, className, foote
         </>
       )}
 
-      {!talk && stage === "confidence" && (
-        <>
-          <div className="conf-head">
-            <div className="conf-q">이 답을 어떻게 떠올렸나요?</div>
-            <button className="conf-back" onClick={() => finish(typedRight, "sure")}>이 질문은 건너뛸래요</button>
-          </div>
-          <div className="conf">
-            {[
-              { v: "sure" as Confidence, label: "확실히 알고 썼어요" },
-              { v: "unsure" as Confidence, label: "헷갈렸지만 떠올렸어요" },
-              { v: "guess" as Confidence, label: "잘 몰라서 추측했어요" },
-            ].map((c) => (
-              <button key={c.v} className="btn btn-sm" style={{ justifyContent: "flex-start" }} onClick={() => finish(typedRight, c.v)}>
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      {!talk && stage === "confidence" && <ConfChips q="쓴 답, 얼마나 확실해요?" onPick={(c) => finish(typedRight, c)} />}
 
       {stage === "done" && result && (
         <>
@@ -251,7 +247,7 @@ function WrittenCard({ q, source, reviewOf, hints, showExplain, className, foote
             <div className="explain">
               <b>정답 · {q.blank![0]}</b>
               {q.explanation}
-              {!result.correct && <div style={{ marginTop: 6, color: "var(--red)" }}>{result.why}</div>}
+              {!result.correct && <div style={{ marginTop: 6, color: "var(--color-red)" }}>{result.why}</div>}
             </div>
           )}
           {footer?.(result)}
@@ -321,22 +317,7 @@ function ChoiceCard({ q, source, reviewOf, hints, showExplain, className, footer
         </div>
       )}
 
-      {stage === "confidence" && (
-        <>
-          <div className="conf-head">
-            <div className="conf-q">이 답을 어떻게 선택했나요?</div>
-            <button className="conf-back" onClick={() => submit("sure")}>이 질문은 건너뛸래요</button>
-          </div>
-          <div className="conf">
-            {CONF.map((c) => (
-              <button key={c.v} className="btn btn-sm" style={{ justifyContent: "flex-start" }} onClick={() => submit(c.v)}>
-                {c.label}
-              </button>
-            ))}
-          </div>
-          <div className="subtle" style={{ marginTop: 6 }}>다른 보기를 눌러도 답을 바꿀 수 있어요. 확신도는 진짜 이해했는지 판단하는 데 쓰여요.</div>
-        </>
-      )}
+      {stage === "confidence" && <ConfChips q="고른 답, 얼마나 확실해요?" onPick={submit} />}
 
       {stage === "done" && result && (
         <>
@@ -345,7 +326,7 @@ function ChoiceCard({ q, source, reviewOf, hints, showExplain, className, footer
             <div className="explain">
               <b>해설</b>
               {q.explanation}
-              {!result.correct && result.why && <div style={{ marginTop: 6, color: "var(--red)" }}>이번 실수 · {result.why}</div>}
+              {!result.correct && result.why && <div style={{ marginTop: 6, color: "var(--color-red)" }}>이번 실수 · {result.why}</div>}
               {result.correct && result.confidence !== "sure" && (
                 <div style={{ marginTop: 6, color: "#b26a00" }}>맞혔지만 확신이 낮아서, 내일 비슷한 문제로 한 번 더 확인할게요.</div>
               )}

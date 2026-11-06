@@ -17,10 +17,7 @@ export function Mascot({ size = 96, live = false, spin = false }: { size?: numbe
     return (
       <span className={motion} style={{ width: size, height: size }} aria-hidden>
         <span className="mascot-body">
-          {/* stacking order matters: frames 1→7 each fade in over the previous, the front (0) sits on top */}
-          {[1, 2, 3, 4, 5, 6, 7, 0].map((k) => (
-            <span key={k} className={`mascot-turn f${k}`} style={{ backgroundImage: `url(${turnUrl})` }} />
-          ))}
+          <span className="mascot-turn" style={{ backgroundImage: `url(${turnUrl})` }} />
         </span>
       </span>
     );

@@ -121,7 +121,7 @@ function schedule(reviews: Review[], a: Attempt): Review[] {
 }
 
 /** Default nickname (shown next to the avatar); also used for older saved logins that have none. */
-export const DEFAULT_HANDLE = "늘보";
+export const DEFAULT_HANDLE = "플러키";
 
 function reducer(s: State, a: Action): State {
   switch (a.type) {

@@ -37,7 +37,7 @@ export function Setup() {
           <span className="subtle">1 / 4 · 시험과 목표</span>
           <h1>{state.user?.name}님, 어떤 시험을 준비하나요?</h1>
           <p className="muted">시험일과 출제 범위는 공식 안내를 기준으로 정리했어요. AI가 임의로 정하지 않아요.</p>
-          <div className="card" style={{ borderColor: "var(--green)", background: "var(--green-25)", marginTop: 20 }}>
+          <div className="card" style={{ borderColor: "var(--color-green)", background: "var(--color-green-25)", marginTop: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
               <span className="strong" style={{ fontSize: 18 }}>{EXAM.name} {EXAM.round}</span>
               <span className="chip chip-green">D-{dday}</span>
@@ -75,7 +75,7 @@ export function Setup() {
           <div className="grid g-2" style={{ marginTop: 20 }}>
             {TIMES.map((t) => (
               <button key={t} className={`choice ${minutes === t ? "on" : ""}`} onClick={() => setMinutes(t)}>
-                <Clock size={18} color={minutes === t ? "var(--green)" : "var(--gray-3)"} />
+                <Clock size={18} color={minutes === t ? "var(--color-green)" : "var(--color-gray-3)"} />
                 <span>
                   <span className="strong">{t}분</span>
                   <span className="subtle" style={{ display: "block" }}>
@@ -147,7 +147,7 @@ function DiagnosisResult({ results, minutes, onStart }: { results: QuizResult[];
         <Mascot size={64} mood={pass ? "smile" : "think"} />
         <h1 style={{ margin: 0 }}>합격 예상 점수는 {expected}점이에요</h1>
       </div>
-      <div className="card" style={{ background: "var(--bg)", border: 0 }}>
+      <div className="card" style={{ background: "var(--color-bg)", border: 0 }}>
         <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7 }}>
           {results.length}문제 중 <b>{correct}문제</b>를 맞혔고, 그중 <b>{shaky}문제</b>는 확신이 낮았어요.{" "}
           {weak.length === 0
@@ -171,7 +171,7 @@ function DiagnosisResult({ results, minutes, onStart }: { results: QuizResult[];
       <div className="card" style={{ marginTop: 12 }}>
         <div className="card-head"><h3>내일까지 이렇게 해봐요 · 하루 {minutes}분</h3></div>
         <p className="muted" style={{ margin: 0 }}>
-          약한 개념이 있는 <b style={{ color: "var(--ink)" }}>GROUP BY와 HAVING</b> 자료부터 읽고, 구간마다 확인 문제를 풀어요. 틀리거나 확신이 낮았던 문제는 내일 복습 목록에 자동으로 들어가요.
+          약한 개념이 있는 <b style={{ color: "var(--color-ink)" }}>GROUP BY와 HAVING</b> 자료부터 읽고, 구간마다 확인 문제를 풀어요. 틀리거나 확신이 낮았던 문제는 내일 복습 목록에 자동으로 들어가요.
         </p>
       </div>
       <button className="btn btn-primary btn-lg btn-block" style={{ marginTop: 24 }} onClick={onStart}>내 학습으로 가기</button>

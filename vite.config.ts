@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { handleAgentRequest } from "./api/agent";
@@ -13,4 +14,4 @@ function agentApi(): Plugin {
 }
 
 // The project sits on an external drive where Vite may not be allowed to write its cache.
-export default defineConfig({ plugins: [react(), agentApi()], cacheDir: join(tmpdir(), "sprout-vite-cache") });
+export default defineConfig({ plugins: [react(), tailwindcss(), agentApi()], cacheDir: join(tmpdir(), "sprout-vite-cache") });

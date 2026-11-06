@@ -152,7 +152,7 @@ export function AgentChat({ material, section, command }: { material: Material; 
                   {m.card?.kind === "quiz" &&
                     (m.card.result ? (
                       <div className="quiz-card" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <CheckCircle2 size={16} color={m.card.result.correct ? "var(--green)" : "var(--red)"} />
+                        <CheckCircle2 size={16} color={m.card.result.correct ? "var(--color-green)" : "var(--color-red)"} />
                         <span className="grow ellipsis" style={{ flex: 1, fontSize: 13 }}>{getQuestion(m.card.qid)!.stem}</span>
                         <span className={`chip ${tagChipClass(m.card.result.tag)}`}>{m.card.result.tag ?? "정답"}</span>
                       </div>

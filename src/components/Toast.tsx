@@ -14,7 +14,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {msg && (
         <div className="toast" role="status">
-          <CheckCircle2 size={16} color="var(--green)" />
+          <CheckCircle2 size={16} color="var(--color-green)" />
           {msg}
         </div>
       )}

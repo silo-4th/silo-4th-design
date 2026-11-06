@@ -1,4 +1,4 @@
-import { ArrowRight, Check, HelpCircle } from "lucide-react";
+import { BookOpen, Check, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { CONCEPTS, getMaterial } from "../data/materials";
@@ -6,6 +6,7 @@ import { questionsFor, type Question } from "../data/questions";
 import { Rich } from "../components/Rich";
 import { todayKey, useStore, type Attempt, type ChatMsg, type Confidence } from "../store";
 import { HOME } from "../App";
+import cookieUrl from "../assets/mascot-cookie.webp";
 
 /**
  * 꺼내 보기 — right after login, pull 3 things studied before back out of memory (retrieval practice).
@@ -39,8 +40,19 @@ type Answer = {
   confidence: Confidence;
   dontKnow: boolean;
   mine: string;
+  /** the answer itself (option text, blank word, or an explanation's key point) */
   right: string;
+  /** why it is the answer, shown under the comparison */
+  why?: string;
 };
+
+/** Answer + explanation for a question, kept apart so the result can show them separately. */
+function answerOf(q: Question): Pick<Answer, "right" | "why"> {
+  if (q.blank) return { right: q.blank[0], why: q.explanation };
+  // explain questions: the first key point is the answer; the reasoning lives in 해설
+  if (q.talk?.length) return { right: q.talk[0].label, why: q.explanation };
+  return { right: q.explanation };
+}
 
 function agoLabel(at?: number) {
   if (!at) return "최근 읽음";
@@ -155,12 +167,14 @@ export function Recall() {
   return (
     <main className="recall">
       <section className="recall-frame">
-        <div className="recall-bar">
-          <span className="recall-bar-title">{step === "done" ? "꺼내 보기 결과" : "꺼내 보기"}</span>
-          {/* 나중에 할게요 now lives under the start button, so the intro keeps this side empty */}
-          {step === "quiz" && <span className="recall-bar-count">{i + 1} / {items.length}</span>}
-          {step === "done" && <Link className="recall-bar-link" to={HOME}>학습 화면으로</Link>}
-        </div>
+        {/* the result page has no top bar: the cookie reward opens it */}
+        {step !== "done" && (
+          <div className="recall-bar">
+            <span className="recall-bar-title">꺼내 보기</span>
+            {/* 나중에 할게요 now lives under the start button, so the intro keeps this side empty */}
+            {step === "quiz" && <span className="recall-bar-count">{i + 1} / {items.length}</span>}
+          </div>
+        )}
         {step === "quiz" && (
           <div className="recall-steps" role="progressbar" aria-label="꺼내 보기 진행" aria-valuemin={1} aria-valuemax={items.length} aria-valuenow={i + 1}>
             {items.map((_, k) => <i key={k} className={k < i ? "on" : k === i ? "now" : ""} />)}
@@ -204,7 +218,7 @@ function Intro({ items, onStart, onLater }: { items: Item[]; onStart: () => void
       </div>
       <div className="recall-cta">
         <button className="btn btn-dark btn-lg btn-block" onClick={onStart}>시작하기</button>
-        <button className="recall-later" onClick={onLater}>내일 꺼내 볼게요</button>
+        <button className="recall-later" onClick={onLater}>내일 꺼내 먹을래요</button>
       </div>
     </div>
   );
@@ -216,25 +230,51 @@ const CONF: { v: Confidence; label: string }[] = [
   { v: "guess", label: "찍었어요" },
 ];
 
+/** "고른 답, 얼마나 확실해요?" + 확실해요 / 애매해요 / 찍었어요 — the same row under every question. */
+function ConfRow({ q, off, value, onChange }: { q: string; off: boolean; value: Confidence | null; onChange: (c: Confidence) => void }) {
+  return (
+    <div className={`recall-conf ${off ? "off" : ""}`}>
+      <span className="recall-conf-q">{q}</span>
+      {CONF.map((c) => (
+        <button key={c.v} className={`recall-conf-chip ${value === c.v ? "on" : ""}`} disabled={off} aria-pressed={value === c.v} onClick={() => onChange(c.v)}>
+          {c.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** "[책] 오늘 읽은 · 단원" — the same source badge on top of every question. */
+function SourceBadge({ item }: { item: Item }) {
+  return (
+    <span className="chip recall-from">
+      <BookOpen size={13} aria-hidden />
+      <span className="recall-from-when">{item.at ? `${agoLabel(item.at)} 읽은` : "최근 읽은"}</span>
+      {item.sectionTitle}
+    </span>
+  );
+}
+
 function ChoiceStep({ item, last, onDone }: { item: Item; last: boolean; onDone: (a: Answer, picked: number) => void }) {
   const q = item.question;
-  const [picked, setPicked] = useState<number | null>(null); // -1 = 잘 모르겠어요
+  const [picked, setPicked] = useState<number | null>(null);
   const [conf, setConf] = useState<Confidence | null>(null);
-  const dontKnow = picked === -1;
-  const ready = picked !== null && (dontKnow || conf !== null);
+  // not sure at all → pick one and answer "찍었어요"
+  const ready = picked !== null && conf !== null;
   const letters = q.type === "OX" ? ["O", "X"] : ["A", "B", "C", "D"];
 
   const next = () => {
-    if (picked === null) return;
+    if (picked === null || conf === null) return;
     onDone(
       {
         item,
         qid: q.id,
-        correct: !dontKnow && picked === q.answer,
-        confidence: dontKnow ? "guess" : conf!,
-        dontKnow,
-        mine: dontKnow ? "잘 모르겠어요" : q.options[picked].text,
+        correct: picked === q.answer,
+        confidence: conf,
+        dontKnow: false,
+        mine: q.options[picked].text,
         right: q.options[q.answer].text,
+        why: q.explanation,
       },
       picked
     );
@@ -242,7 +282,7 @@ function ChoiceStep({ item, last, onDone }: { item: Item; last: boolean; onDone:
 
   return (
     <div className="recall-col">
-      <span className="recall-from">{agoLabel(item.at)} 읽은 「{item.sectionTitle}」에서 꺼냈어요</span>
+      <SourceBadge item={item} />
       <p className="q-stem">{q.stem}</p>
       {q.code && <pre className="q-code mono">{q.code}</pre>}
       <div className="opts" role="radiogroup" aria-label="보기">
@@ -252,25 +292,13 @@ function ChoiceStep({ item, last, onDone }: { item: Item; last: boolean; onDone:
             <span className={o.text.includes("SELECT") ? "mono" : ""} style={{ fontSize: o.text.includes("SELECT") ? 12.5 : undefined }}>{o.text}</span>
           </button>
         ))}
-        <button className={`opt opt-unknown ${dontKnow ? "sel" : ""}`} role="radio" aria-checked={dontKnow} onClick={() => { setPicked(-1); setConf(null); }}>
-          <span className="k"><HelpCircle size={13} /></span>
-          잘 모르겠어요
-        </button>
       </div>
 
-      <div className={`recall-conf ${picked === null || dontKnow ? "off" : ""}`}>
-        <span className="recall-conf-q">고른 답, 얼마나 확실해요?</span>
-        {CONF.map((c) => (
-          <button key={c.v} className={`recall-conf-chip ${conf === c.v ? "on" : ""}`} disabled={picked === null || dontKnow} aria-pressed={conf === c.v} onClick={() => setConf(c.v)}>
-            {c.label}
-          </button>
-        ))}
-      </div>
+      <ConfRow q="고른 답, 얼마나 확실해요?" off={picked === null} value={conf} onChange={setConf} />
 
-      <div className="recall-actions end">
-        <button className="btn btn-dark" disabled={!ready} onClick={next}>
-          {last ? "결과 보기" : "다음"}
-        </button>
+      {/* every step ends with the same full-width CTA as 시작하기, so the next action is always in one place */}
+      <div className="recall-cta">
+        <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={next}>{last ? "결과 보기" : "다음"}</button>
       </div>
     </div>
   );
@@ -282,44 +310,42 @@ function ExplainStep({ item, last, onDone }: { item: Item; last: boolean; onDone
   const main = item.question;
   const talk = main.type === "대화형";
   const [text, setText] = useState("");
-  // stuck → swap to the easier fill-in-the-blank version (or, with none, just record it as not remembered)
-  const [scaffold, setScaffold] = useState(!talk);
+  // explain questions are written; other kinds are asked as a fill-in-the-blank
+  const scaffold = !talk;
   const blankQ = talk ? item.scaffold : main;
   const [blank, setBlank] = useState("");
+  const [conf, setConf] = useState<Confidence | null>(null);
 
   const submit = () => {
+    if (conf === null) return;
     if (!scaffold) {
       const pts = main.talk ?? [];
       const hit = pts.filter((p) => p.keywords.some((k) => norm(text).includes(norm(k)))).length;
       const correct = pts.length === 0 ? text.trim().length > 20 : hit >= Math.ceil(pts.length / 2);
-      onDone({ item, qid: main.id, correct, confidence: hit === pts.length ? "sure" : "unsure", dontKnow: false, mine: text.trim(), right: main.explanation }, -1);
+      onDone({ item, qid: main.id, correct, confidence: conf, dontKnow: false, mine: text.trim(), ...answerOf(main) }, -1);
       return;
     }
     if (!blankQ) return;
     const correct = !!blankQ.blank?.some((a) => norm(blank).includes(norm(a)));
     onDone(
-      { item, qid: blankQ.id, correct, confidence: talk ? "unsure" : "sure", dontKnow: false, mine: blank.trim(), right: `${blankQ.blank![0]} · ${blankQ.explanation}` },
+      { item, qid: blankQ.id, correct, confidence: conf, dontKnow: false, mine: blank.trim(), ...answerOf(blankQ) },
       -1
     );
   };
 
+  // "이 문제 건너뛰기" moves on to the next question; it is recorded as not remembered
   const giveUp = () => {
-    if (!scaffold && blankQ) {
-      setScaffold(true);
-      return;
-    }
-    const q = blankQ ?? main;
-    onDone({ item, qid: q.id, correct: false, confidence: "guess", dontKnow: true, mine: "잘 모르겠어요", right: q.blank ? `${q.blank[0]} · ${q.explanation}` : q.explanation }, -1);
+    const q = scaffold && blankQ ? blankQ : main;
+    onDone({ item, qid: q.id, correct: false, confidence: "guess", dontKnow: true, mine: "건너뛰었어요", ...answerOf(q) }, -1);
   };
 
-  const ready = scaffold ? !!blank.trim() : !!text.trim();
+  const written = scaffold ? !!blank.trim() : !!text.trim();
+  // same rule as the choice questions: answer first, then say how sure you are
+  const ready = written && conf !== null;
 
   return (
     <div className="recall-col">
-      <div className="recall-memo">
-        <span className="recall-memo-label">{agoLabel(item.at)} 「{item.sectionTitle}」에서 이렇게 읽었어요</span>
-        <div className="recall-memo-text"><Rich text={item.summary} /></div>
-      </div>
+      <SourceBadge item={item} />
 
       {!scaffold ? (
         <>
@@ -331,11 +357,6 @@ function ExplainStep({ item, last, onDone }: { item: Item; last: boolean; onDone
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          {blankQ && (
-            <div className="recall-scaffold idle">
-              막히면 ‘잘 모르겠어요’를 눌러요. 빈칸 하나만 채우는 문장으로 바꿔 드릴게요.
-            </div>
-          )}
         </>
       ) : (
         blankQ && (
@@ -353,26 +374,28 @@ function ExplainStep({ item, last, onDone }: { item: Item; last: boolean; onDone
                 value={blank}
                 autoFocus
                 onChange={(e) => setBlank(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.nativeEvent.isComposing && blank.trim() && submit()}
+                onKeyDown={(e) => e.key === "Enter" && !e.nativeEvent.isComposing && ready && submit()}
               />
             </div>
           </>
         )
       )}
 
-      <div className="recall-actions end">
-        <button className="btn" onClick={giveUp}>잘 모르겠어요</button>
-        <button className="btn btn-dark" disabled={!ready} onClick={submit}>{last ? "결과 보기" : "제출"}</button>
+      <ConfRow q="쓴 답, 얼마나 확실해요?" off={!written} value={conf} onChange={setConf} />
+
+      <div className="recall-cta">
+        <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={submit}>{last ? "결과 보기" : "다음"}</button>
+        <button className="recall-later" onClick={giveUp}>이 문제 건너뛰기</button>
       </div>
     </div>
   );
 }
 
 function status(a: Answer): { label: string; cls: string; solid: boolean } {
-  if (a.dontKnow) return { label: "기억나지 않았어요", cls: "chip-red", solid: false };
-  if (!a.correct) return { label: "다르게 기억했어요", cls: "chip-red", solid: false };
-  if (a.confidence !== "sure") return { label: "맞혔지만 헷갈렸어요", cls: "chip-amber", solid: false };
-  return { label: "잘 기억해요", cls: "chip-green", solid: true };
+  if (a.dontKnow) return { label: "틀렸어요", cls: "chip-red", solid: false };
+  if (!a.correct) return { label: "틀렸어요", cls: "chip-red", solid: false };
+  if (a.confidence !== "sure") return { label: "맞았지만 헷갈렸어요", cls: "chip-amber", solid: false };
+  return { label: "맞혔어요", cls: "chip-green", solid: true };
 }
 
 function Result({ answers }: { answers: Answer[] }) {
@@ -382,55 +405,77 @@ function Result({ answers }: { answers: Answer[] }) {
   const differ = answers.filter((a) => !a.correct).length;
   const n = answers.length;
   const title =
-    differ > 0 ? `${n}개 중 ${differ}개는 알던 것과 달랐어요`
+    differ > 0 ? `${n}개 중 ${differ}개를 틀렸어요`
     : shaky.length > 0 ? `${n}개 다 맞혔지만 ${shaky.length}개는 헷갈렸어요`
-    : `${n}개 모두 잘 기억하고 있어요`;
+    : `${n}개 모두 맞혔어요`;
 
   return (
-    <div className="recall-col wide">
+    <div className="recall-col">
+      {/* reward: finishing all three questions gives 플러키 a cookie */}
+      <div className="recall-reward">
+        <p className="recall-reward-msg"><span aria-hidden>🍪</span>플러키에게 쿠키를 전달했어요!</p>
+        <div className="recall-cookie" aria-hidden>
+          <div className="recall-cookie-float">
+            <img src={cookieUrl} alt="" width={132} height={138} draggable={false} />
+          </div>
+        </div>
+      </div>
       <h1 className="recall-title">{title}</h1>
       <p className="recall-sub">
         {shaky.length === 0 ? "오늘은 새로운 내용으로 넘어가도 좋아요." : "잘 기억한 건 넘어가고, 다른 건 다시 볼 곳을 알려줄게요."}
       </p>
       <div className="recall-list">
-        {answers.map((a) => {
+        {answers.map((a, i) => {
           const st = status(a);
           return (
             <div key={a.item.concept} className={`recall-res ${st.solid ? "solid" : ""}`}>
               <div className="recall-res-head">
-                <b>{CONCEPTS[a.item.concept].name}</b>
+                <b>{i + 1}. {CONCEPTS[a.item.concept].name}</b>
                 <span className={`chip ${st.cls}`}>{st.solid && <Check size={12} />}{st.label}</span>
+                {!st.solid && (
+                  <Link className="recall-goto" to={goto(a)}>
+                    공부하러 가기 <ChevronRight size={14} />
+                  </Link>
+                )}
               </div>
-              {!st.solid && (
+              {/* every result shows the explanation; wrong ones also compare my answer with the right one */}
+              {(
                 <>
                   {a.correct ? (
-                    <p className="recall-res-note">답은 맞았어요. 확신이 낮았던 만큼 한 번 더 읽어 두면 오래 남아요.</p>
+                    a.why ? (
+                      <div className="recall-why">
+                        <span>해설</span>
+                        <div className="recall-compare-text"><Rich text={a.why} /></div>
+                      </div>
+                    ) : null
                   ) : (
-                  <div className="recall-compare">
-                    <div className="mine"><span>내 답</span><div className="recall-compare-text">{a.mine || "—"}</div></div>
-                    <div className="right"><span>정답</span><div className="recall-compare-text"><Rich text={a.right} /></div></div>
-                  </div>
+                  <>
+                    {/* long answers (a sentence or a query) stack top-to-bottom so they get the full width */}
+                    <div className={`recall-compare ${Math.max(a.mine.length, a.right.length) > 30 ? "stack" : ""}`}>
+                      <div className="mine"><span>내 답</span><div className="recall-compare-text">{a.mine || "—"}</div></div>
+                      <div className="right">
+                        <span>정답</span>
+                        <div className="recall-compare-text"><Rich text={a.right} /></div>
+                      </div>
+                    </div>
+                    {a.why && (
+                      <div className="recall-why">
+                        <span>해설</span>
+                        <div className="recall-compare-text"><Rich text={a.why} /></div>
+                      </div>
+                    )}
+                  </>
                   )}
-                  <Link className="recall-goto" to={goto(a)}>
-                    「{a.item.sectionTitle}」 다시 보기 <ArrowRight size={14} />
-                  </Link>
                 </>
               )}
             </div>
           );
         })}
       </div>
-      <div className="recall-actions">
-        {shaky.length > 0 ? (
-          <>
-            <button className="btn btn-dark" onClick={() => nav(goto(shaky[0]))}>다시 볼 곳 보기</button>
-            <button className="btn" onClick={() => nav(HOME)}>넘어가기</button>
-          </>
-        ) : (
-          <button className="btn btn-dark" onClick={() => nav(HOME)}>학습 이어가기</button>
-        )}
+      <div className="recall-cta">
+        <button className="btn btn-dark btn-lg btn-block" onClick={() => nav(HOME)}>오늘 공부 시작하기</button>
+        <p className="subtle recall-foot">헷갈린 개념은 복습 일정에 넣어 두었어요. 며칠 뒤 같은 원리의 새 문제로 다시 나와요.</p>
       </div>
-      <p className="subtle recall-foot">헷갈린 개념은 복습 일정에 넣어 두었어요. 며칠 뒤 같은 원리의 새 문제로 다시 나와요.</p>
     </div>
   );
 }

@@ -179,9 +179,8 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
     else setI(i + 1);
   };
   // One button right under the card: submit while answering, then next / results once graded.
-  const bar = answered
-    ? { label: last ? "결과 보기" : "다음 문제", disabled: false, run: next }
-    : cta ?? { label: "위에서 답을 어떻게 골랐는지 선택해 주세요", disabled: true, run: () => {} };
+  // Before there is anything to submit, show no button at all.
+  const bar = answered ? { label: last ? "결과 보기" : "다음 문제", disabled: false, run: next } : cta;
 
   return (
     <>
@@ -205,11 +204,13 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
             setAnswered(true);
           }}
         />
-        <div className="quiz-cta">
-          <button className={`btn btn-block ${bar.disabled ? "" : "btn-primary"}`} disabled={bar.disabled} onClick={bar.run}>
-            {bar.label}
-          </button>
-        </div>
+        {bar && (
+          <div className="quiz-cta">
+            <button className={`btn btn-block ${bar.disabled ? "" : "btn-primary"}`} disabled={bar.disabled} onClick={bar.run}>
+              {bar.label}
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

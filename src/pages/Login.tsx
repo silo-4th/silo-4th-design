@@ -1,5 +1,5 @@
-import { Check, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { Check, CheckCircle2, LoaderCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleMark, Mascot } from "../components/Brand";
 import { DEFAULT_HANDLE, useStore } from "../store";
@@ -8,11 +8,25 @@ export function Login() {
   const { state, dispatch } = useStore();
   const nav = useNavigate();
   const [name, setName] = useState(DEFAULT_HANDLE);
+  // like a real sign-in: a short "checking" spinner, a brief welcome, then the next page
+  const [phase, setPhase] = useState<"idle" | "loading" | "done">("idle");
+  const timers = useRef<number[]>([]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const start = () => {
-    dispatch({ type: "login", name: name.trim() || DEFAULT_HANDLE });
-    nav(state.setup ? "/recall" : "/setup");
+    if (phase !== "idle") return;
+    const who = name.trim() || DEFAULT_HANDLE;
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setPhase("loading");
+    timers.current.push(
+      window.setTimeout(() => setPhase("done"), calm ? 200 : 500),
+      window.setTimeout(() => {
+        dispatch({ type: "login", name: who });
+        nav(state.setup ? "/recall" : "/setup");
+      }, calm ? 900 : 1700),
+    );
   };
+  const busy = phase !== "idle";
 
   return (
     <main className="login">
@@ -35,8 +49,8 @@ export function Login() {
         <div className="points">
           <div className="strong" style={{ fontSize: 17, marginBottom: 10 }}>읽고, 확인하고, 기록하는 AI 리딩 파트너</div>
           {["모르는 문장은 드래그해서 바로 쉽게 설명받기", "설명 뒤엔 짧은 확인 문제로 진짜 이해했는지 체크", "틀린 이유와 복습 일정이 자동으로 쌓여요"].map((t) => (
-            <div key={t} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: "var(--ink-2)", marginTop: 6 }}>
-              <CheckCircle2 size={16} color="var(--green)" />
+            <div key={t} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: "var(--color-ink-2)", marginTop: 6 }}>
+              <CheckCircle2 size={16} color="var(--color-green)" />
               {t}
             </div>
           ))}
@@ -45,18 +59,26 @@ export function Login() {
 
       <section className="login-form">
         <h1>나만의 학습을 시작해보세요!</h1>
-        <p style={{ fontSize: 17, lineHeight: 1.6, color: "var(--ink-2)", margin: "0 0 8px", maxWidth: 420 }}>
+        <p style={{ fontSize: 17, lineHeight: 1.6, color: "var(--color-ink-2)", margin: "0 0 8px", maxWidth: 420 }}>
           궁금한 내용을 질문하고, 학습 기록을 저장하며 언제든 이어서 공부할 수 있어요.
         </p>
         <p className="muted" style={{ margin: "0 0 28px", maxWidth: 420 }}>AI가 설명만 하고 끝나지 않아요. 내가 혼자 풀 수 있을 때까지 도움을 조금씩 줄여가요.</p>
         <div className="field" style={{ maxWidth: 380 }}>
           <label htmlFor="name">별명</label>
-          <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && start()} />
+          <input id="name" className="input" value={name} disabled={busy} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && start()} />
         </div>
-        <button className="google-btn" style={{ maxWidth: 380 }} onClick={start}>
-          <GoogleMark />
-          Google로 계속하기
+        <button
+          className={`google-btn${phase === "done" ? " is-done" : ""}`}
+          style={{ maxWidth: 380 }}
+          onClick={start}
+          disabled={busy}
+          aria-busy={phase === "loading"}
+        >
+          {phase === "idle" && (<><GoogleMark />Google로 계속하기</>)}
+          {phase === "loading" && (<><LoaderCircle size={18} className="spinner" />로그인하는 중…</>)}
+          {phase === "done" && (<><Check size={18} />{name.trim() || DEFAULT_HANDLE}님, 환영해요!</>)}
         </button>
+        <p className="sr-only" role="status">{phase === "loading" ? "로그인하는 중" : phase === "done" ? "로그인됐어요. 학습 화면으로 이동해요." : ""}</p>
         <p className="subtle" style={{ marginTop: 14, maxWidth: 380 }}>프로토타입이라 실제 Google 계정 연동 없이 이 브라우저에만 학습 기록이 저장돼요.</p>
       </section>
     </main>
