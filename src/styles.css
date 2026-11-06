@@ -234,7 +234,6 @@ code, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; 
 
 /* ---------- Quiz (Inflearn quiz style) ---------- */
 .q-stem { font-size: 17px; font-weight: 700; line-height: 1.5; margin: 0 0 --spacing(3); }
-.q-note { margin: --spacing(-1.5) 0 --spacing(3); font-size: 12.5px; color: var(--color-gray); line-height: 1.5; }
 .q-code { background: var(--color-bg); border: 1px solid var(--color-line-2); border-radius: var(--radius-sm); padding: --spacing(3) --spacing(3.5); font-size: 13px; white-space: pre-wrap; margin: 0 0 --spacing(3.5); }
 .opts { display: flex; flex-direction: column; gap: --spacing(2); }
 .opt { display: flex; align-items: center; gap: --spacing(2.5); width: 100%; text-align: left; padding: --spacing(3) --spacing(3.5); border: 1px solid var(--color-line); border-radius: var(--radius-md); background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.03); font-size: 14px; }
@@ -256,6 +255,20 @@ code, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; 
 .q-result.no { background: var(--color-red-50); color: var(--color-red); }
 .explain { background: var(--color-bg); border-radius: var(--radius-md); padding: --spacing(3.5) --spacing(4); margin-top: --spacing(2.5); font-size: 13px; color: var(--color-ink-2); }
 .explain b { display: block; color: var(--color-ink); margin-bottom: --spacing(1); }
+/* 해설 제목 줄: 왼쪽 제목, 오른쪽 결과 뱃지(개념 혼동 등) */
+.explain-head { display: flex; align-items: center; justify-content: space-between; gap: --spacing(2); margin-bottom: --spacing(1.5); }
+.explain-head b { margin-bottom: 0; }
+/* 결과 한 줄: 해설 박스 맨 위에서 맞았는지 바로 보이게 */
+.verdict, .explain-head .verdict { display: inline-flex; align-items: center; gap: --spacing(1); margin: 0; font-size: 15px; font-weight: 700; }
+/* 아이콘은 원 없이 체크·엑스만, 글자 굵기에 맞춰 굵게 */
+.verdict svg { flex: none; }
+.verdict.ok { color: var(--color-green-600); }
+.verdict.no { color: var(--color-red); }
+/* 핵심 목록도 모범 답안과 같은 형식: 굵은 검정 제목 + 본문 글자 */
+.talk-check-sub { margin-top: --spacing(1); font-size: 13px; font-weight: 700; color: var(--color-ink); }
+/* 빈칸을 틀렸을 때: 입력칸 바로 아래 초록 정답 줄(객관식의 정답 보기와 같은 모양) */
+.q-fill-answer { cursor: default; }
+.q-fill-answer + .q-fill-answer { margin-top: --spacing(2); }
 .q-blank { display: inline-block; min-width: 56px; height: 1.1em; margin: 0 --spacing(1); border-bottom: 2px solid var(--color-ink); vertical-align: -2px; }
 .q-fill { width: 100%; height: 44px; font-size: 15px; }
 .q-fill.right { border-color: var(--color-green); background: var(--color-green-25); }
@@ -263,12 +276,20 @@ code, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; 
 /* 서술형 답 입력칸: 늘리기 손잡이 없이 자리마다 맞는 높이로 고정. 넘치면 칸 안에서 스크롤 */
 .q-write { display: block; width: 100%; padding: --spacing(3) --spacing(3.5); font-size: 14px; line-height: 1.6; resize: none; height: 92px; /* 퀴즈 탭(좁은 패널): 3줄 */ }
 .recall .q-write { height: 114px; /* 꺼내 보기(넓은 본문, 설명이 주 과제): 4줄 */ }
-.talk-check { margin-top: --spacing(3); border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: --spacing(3) --spacing(3.5); display: flex; flex-direction: column; gap: --spacing(1.5); }
+/* 서술형 결과도 해설 박스와 같은 모양: 연한 회색 면, 테두리 없음, 같은 여백과 글자 */
+.talk-check { margin-top: --spacing(2.5); background: var(--color-bg); border-radius: var(--radius-md); padding: --spacing(3.5) --spacing(4); display: flex; flex-direction: column; gap: --spacing(1.5); font-size: 13px; color: var(--color-ink-2); }
 .talk-check-head { font-size: 13px; margin-bottom: --spacing(0.5); }
-.talk-point { display: flex; align-items: center; gap: --spacing(2); font-size: 13px; color: var(--color-gray); }
-.talk-point.on { color: var(--color-green-600); font-weight: 600; }
-.talk-model { margin-top: --spacing(1.5); padding-top: --spacing(2.5); border-top: 1px solid var(--color-line-2); font-size: 13.5px; line-height: 1.7; color: var(--color-ink-2); }
+.talk-point { display: flex; align-items: center; gap: --spacing(2); font-size: 13px; line-height: 1.6; color: var(--color-ink-2); }
+.talk-point svg { flex: none; color: var(--color-gray-3); }
+.talk-point.on svg { color: var(--color-green-600); }
+.talk-model { margin-top: --spacing(1.5); padding-top: --spacing(2.5); border-top: 1px solid var(--color-line); font-size: 13px; line-height: 1.6; color: var(--color-ink-2); }
 .talk-model b { display: block; margin-bottom: --spacing(1); color: var(--color-ink); }
+/* 힌트: 단원 뱃지 줄 오른쪽 끝의 작은 회색 글자. 문제를 읽다 막힐 때만 눈에 들어오게 */
+.hint-link { margin-left: auto; display: inline-flex; align-items: center; gap: --spacing(1); height: 22px; font-size: 12.5px; font-weight: 500; color: var(--color-gray); }
+.hint-link:hover { color: var(--color-ink-2); }
+/* 펼친 힌트는 문제 바로 아래, 보기·입력칸과 간격을 두고 */
+.hint + .opts, .hint + .input { margin-top: --spacing(3); }
+.hint-link:focus-visible { outline: 2px solid var(--color-green); outline-offset: 2px; border-radius: 4px; }
 .hint { background: var(--color-amber-50); border-radius: var(--radius-md); padding: --spacing(2.5) --spacing(3); margin-top: --spacing(2.5); font-size: 13px; color: #7a4b00; display: flex; gap: --spacing(2); }
 .conf { display: flex; flex-direction: column; gap: --spacing(1.5); margin-top: --spacing(3); }
 /* answer choices, not headings: regular weight so the question above stays the title */
@@ -422,7 +443,8 @@ code, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; 
 .seg { display: flex; align-self: stretch; gap: --spacing(2); margin-bottom: -1px; }
 .seg button { height: 100%; padding: 0 --spacing(2.5); white-space: nowrap; font-size: 14px; font-weight: 500; color: var(--color-gray); border-bottom: 2px solid transparent; padding-top: --spacing(0.5); transition: color 0.15s, border-color 0.15s; }
 .seg button:hover { color: var(--color-ink-2); }
-.seg button.on { color: var(--color-ink); font-weight: 600; border-bottom-color: var(--color-green); }
+/* 탭(길 안내)은 검정, 초록은 정답·진행 같은 학습 상태에만 */
+.seg button.on { color: var(--color-ink); font-weight: 600; border-bottom-color: var(--color-ink); }
 .seg button:focus-visible { outline: 2px solid var(--color-green); outline-offset: -4px; border-radius: var(--radius-sm); }
 .panel-body { flex: 1; min-height: 0; overflow-y: auto; }
 
@@ -437,19 +459,27 @@ code, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; 
 .mascot-body { position: relative; display: block; width: 100%; height: 100%; transform-origin: 50% 94%; will-change: transform; }
 /* Top margin reserves room for the hop (up to 22px + stretch) so it never reaches the panel header. */
 .mascot--live, .mascot--spin { margin-top: --spacing(4); margin-bottom: --spacing(4); }
-/* spin: the turnaround drawings flip by quickly while it's in the air (no cross-fade: two faces never overlap).
-   Few drawings read as a smooth turn when they go by fast; the jump's crouch / landing squash does the easing. */
-.mascot-turn { position: absolute; inset: 0; background-repeat: no-repeat; background-size: 800% 100%; animation: mascot-frames 3.8s infinite step-end; }
+/* spin: 16 views of one body turning (front and back drawings wrapped round it), so the outline never jumps.
+   One quick whip-round (~0.27s, even speed) at the top of the jump: too fast to read single views. */
+.mascot-turn { position: absolute; inset: 0; background-repeat: no-repeat; background-size: 1600% 100%; animation: mascot-frames 3.8s infinite step-end; }
 @keyframes mascot-frames {
-  0%, 36.99% { background-position: 0% 0; }
-  37.00% { background-position: 14.2857% 0; }
-  38.70% { background-position: 28.5714% 0; }
-  40.40% { background-position: 42.8571% 0; }
-  42.10% { background-position: 57.1429% 0; }
-  43.80% { background-position: 71.4286% 0; }
-  45.50% { background-position: 85.7143% 0; }
-  47.20% { background-position: 100.0000% 0; }
-  48.90%, 100% { background-position: 0% 0; }
+  0%, 39.99% { background-position: 0% 0; }
+  40.44% { background-position: 6.6667% 0; }
+  40.88% { background-position: 13.3333% 0; }
+  41.31% { background-position: 20.0000% 0; }
+  41.75% { background-position: 26.6667% 0; }
+  42.19% { background-position: 33.3333% 0; }
+  42.62% { background-position: 40.0000% 0; }
+  43.06% { background-position: 46.6667% 0; }
+  43.50% { background-position: 53.3333% 0; }
+  43.94% { background-position: 60.0000% 0; }
+  44.38% { background-position: 66.6667% 0; }
+  44.81% { background-position: 73.3333% 0; }
+  45.25% { background-position: 80.0000% 0; }
+  45.69% { background-position: 86.6667% 0; }
+  46.12% { background-position: 93.3333% 0; }
+  46.56% { background-position: 100.0000% 0; }
+  47.00%, 100% { background-position: 0% 0; }
 }
 .mascot--live .mascot-body { animation: mascot-hop 4.2s infinite; }
 .mascot--spin .mascot-body { animation: mascot-turn 3.8s infinite; }
@@ -619,21 +649,27 @@ code, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; 
 .quiz-mark.no { background: var(--color-red-50); color: var(--color-red); }
 .quiz-actions { display: flex; gap: --spacing(2); margin-top: --spacing(4.5); }
 .quiz-actions .btn { flex: 1; justify-content: center; }
-.quiz-card:has(.quiz-strip) { position: relative; overflow: hidden; }
-.quiz-card:has(.quiz-strip) .q-chips { padding-right: --spacing(13); }
-.quiz-strip { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--color-line-2); }
-.quiz-strip i { display: block; height: 100%; background: var(--color-green); border-radius: 0 2px 2px 0; transition: width 0.3s ease-out; }
-@media (prefers-reduced-motion: reduce) { .quiz-strip i { transition: none; } }
-.quiz-count { position: absolute; top: 18px; right: 16px; font-size: 12.5px; font-weight: 600; color: var(--color-gray); font-variant-numeric: tabular-nums; }
-.quiz-cta { margin-top: --spacing(4); }
-.quiz-cta .btn { height: 48px; font-size: 15px; font-weight: 700; }
-.quiz-cta .btn:disabled { background: var(--color-line-2); color: var(--color-gray); border-color: transparent; }
+.quiz-cta { margin-top: --spacing(6); }
+.quiz-cta .btn { height: 44px; font-size: 15px; font-weight: 600; }
+/* 누를 수 없을 때도 같은 버튼을 흐리게: 빈 상자처럼 보이지 않게 */
+.quiz-cta .btn:disabled { opacity: 0.35; }
 .quiz-intro { display: flex; gap: --spacing(2.5); align-items: flex-start; margin-bottom: --spacing(3); }
 .quiz-intro p { margin: 0; padding: --spacing(3) --spacing(3.5); background: var(--color-bg); border-radius: var(--radius-lg); font-size: 14px; line-height: 1.6; color: var(--color-ink-2); }
 .quiz-card { border: 1px solid var(--color-line); border-radius: var(--radius-lg); padding: --spacing(4); background: #fff; box-shadow: var(--shadow-card); width: 100%; }
 .quiz-card .q-stem { font-size: 15px; }
 .quiz-card .opt { padding: --spacing(2.5) --spacing(3); font-size: 13.5px; }
-
+/* 퀴즈 패널: 패널이 이미 틀이라 카드 테두리·그림자·안쪽 여백 없이 흐르게. 문제 번호는 제목 앞 "4." */
+.quiz-flat { border: 0; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+/* 맨 위 얇은 게이지(번호는 문제 제목 앞에). 탭과 떨어지도록 패널 여백 아래에 */
+/* 게이지는 원래 자리(맨 위, 전체 폭) 그대로, 플러키는 자리를 차지하지 않고 위에 겹쳐 서요 */
+.quiz-gauge { position: relative; margin-bottom: --spacing(6); }
+.quiz-strip { display: flex; gap: 3px; height: 4px; }
+/* 게이지 끝, 막대 높이 가운데에 걸친 플러키(몸 전체) */
+.quiz-runner { position: absolute; left: 0; right: 0; top: 50%; height: 0; pointer-events: none; transition: transform 0.3s ease-out; }
+.quiz-runner img { position: absolute; top: -11px; left: -11px; width: 22px; height: 22px; filter: drop-shadow(0 2px 2px rgba(40, 170, 110, 0.25)); }
+.quiz-strip i { flex: 1; height: 100%; border-radius: 2px; background: var(--color-line-2); transition: background-color 0.3s ease-out; }
+.quiz-strip i.on { background: var(--color-green); }
+@media (prefers-reduced-motion: reduce) { .quiz-strip i, .quiz-runner { transition: none; } }
 .composer { flex: none; margin: 0 --spacing(4) --spacing(2.5); border: 1px solid var(--color-line); border-radius: var(--radius-lg); background: #fff; box-shadow: var(--shadow-card); overflow: hidden; transition: border-color 0.15s; display: grid; grid-template-columns: 1fr auto; }
 .composer:focus-within { border-color: var(--color-gray-3); }
 .composer .ctx { grid-column: 1 / -1; display: flex; align-items: center; gap: --spacing(1.5); padding: --spacing(2) --spacing(3) 0; font-size: 12px; color: var(--color-gray); }

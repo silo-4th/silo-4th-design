@@ -1,6 +1,7 @@
 import { ChevronLeft, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Mascot } from "../components/Brand";
+import mascotUrl from "../assets/mascot.png";
 import { Burst } from "../components/Burst";
 import { QuizCard, tagChipClass, type QuizCta, type QuizResult } from "../components/QuizCard";
 import { CONCEPTS, type Material, type Section } from "../data/materials";
@@ -162,15 +163,13 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
               <RotateCcw size={14} />헷갈린 문제 다시 풀기
             </button>
           )}
-          <button className="btn btn-primary" onClick={() => begin(pick(), false)}>새 문제 풀기</button>
+          <button className="btn btn-dark" onClick={() => begin(pick(), false)}>새 문제 풀기</button>
         </div>
       </div>
     );
   }
 
   const qid = set[i];
-  const done = results.length;
-  const pct = Math.round((done / set.length) * 100);
   const last = i === set.length - 1;
 
   const next = () => {
@@ -187,17 +186,26 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
       <div className="panel-body" style={{ padding: 20 }}>
         <QuizCard
           key={`${qid}-${round}-${i}`}
-          className="quiz-card"
+          className="quiz-card quiz-flat"
           qid={qid}
           source="check"
           onCta={setCta}
+          num={Math.min(i + 1, set.length)}
           top={
-            <>
-              <div className="quiz-strip" role="progressbar" aria-label="문제 진행" aria-valuemin={0} aria-valuemax={set.length} aria-valuenow={done}>
-                <i style={{ width: `${pct}%` }} />
+            <div className="quiz-gauge">
+              {/* one segment per question, split by 3px gaps; answered ones turn green */}
+              <div className="quiz-strip" role="progressbar" aria-label="문제 진행" aria-valuemin={0} aria-valuemax={set.length} aria-valuenow={results.length}>
+                {set.map((_, k) => <i key={k} className={k < results.length ? "on" : ""} />)}
               </div>
-              <span className="quiz-count">{retry && "다시 "}{Math.min(i + 1, set.length)} / {set.length}</span>
-            </>
+              {/* 플러키 sits at the end of the last green segment (the layer is as wide as the bar) */}
+              <span
+                className="quiz-runner"
+                style={{ transform: results.length ? `translateX(calc(${results.length / set.length} * (100% + 3px) - 3px))` : "none" }}
+                aria-hidden
+              >
+                <img src={mascotUrl} alt="" draggable={false} />
+              </span>
+            </div>
           }
           onAnswered={(r) => {
             setResults((rs) => [...rs, r]);
@@ -206,7 +214,7 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
         />
         {bar && (
           <div className="quiz-cta">
-            <button className={`btn btn-block ${bar.disabled ? "" : "btn-primary"}`} disabled={bar.disabled} onClick={bar.run}>
+            <button className="btn btn-block btn-dark" disabled={bar.disabled} onClick={bar.run}>
               {bar.label}
             </button>
           </div>

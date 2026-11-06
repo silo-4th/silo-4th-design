@@ -5,8 +5,8 @@ import turnUrl from "../assets/mascot-turn.webp";
  * Sprout buddy used as the AI agent's face.
  * `live` = hop, breathe and blink (agent main screen); `spin` = hop with a full turn (quiz screens).
  * Without either, small mascots get a gentle bob.
- * The spin uses the character turnaround sheet: 8 frames (front → 3/4 → side → back → other side → front,
- * the second half mirrored) that swap while it jumps, so it really turns instead of flipping a flat card.
+ * The spin uses a 16-view sheet: the front and back drawings wrapped round one body and turned a full circle,
+ * swapped while it jumps, so it really turns and its outline never jumps between drawings.
  * `mood` is kept for existing call sites; the artwork is the same for every mood.
  */
 export function Mascot({ size = 96, live = false, spin = false }: { size?: number; mood?: "smile" | "wow" | "think"; live?: boolean; spin?: boolean }) {
