@@ -17,6 +17,8 @@ export type Attempt = {
   /** Set when a variant question was asked in place of a scheduled review. */
   reviewOf?: string;
   at: number;
+  /** option the learner picked (choice questions), so past quizzes can show 내 답 */
+  picked?: number;
 };
 
 export type Review = { qid: string; concept: string; due: number; step: number };
@@ -38,6 +40,8 @@ export type QuizSession = {
   results: { qid: string; correct: boolean; confidence: Confidence; tag?: ErrorTag; why?: string }[];
   retry: boolean;
   phase: "quiz" | "done";
+  /** the quiz home was showing, so coming back to the tab opens it again */
+  home?: boolean;
 };
 
 /** A finished conversation, kept so the learner can reopen it from the history list. */
@@ -140,6 +144,7 @@ function reducer(s: State, a: Action): State {
         at: Date.now(),
         concept: q.concept,
         tag: tagFor(a.attempt.correct, a.attempt.confidence, q.options[a.picked]?.tag),
+        picked: a.picked >= 0 ? a.picked : undefined,
       };
       return { ...s, attempts: [...s.attempts, attempt], reviews: schedule(s.reviews, attempt) };
     }

@@ -177,11 +177,11 @@ export const QUESTIONS: Question[] = [
     type: "객관식",
     level: 1,
     family: "inner",
-    stem: "EMP(부서 10, 20, 30)와 DEPT(10, 20, 30, 40)를 DEPTNO로 INNER JOIN 했을 때 결과에 나오지 않는 부서는?",
-    options: [{ text: "10", tag: "개념 부족" }, { text: "20", tag: "개념 부족" }, { text: "30", tag: "개념 부족" }, { text: "40" }],
-    answer: 3,
-    hints: ["INNER JOIN은 양쪽에 짝이 있는 행만 남겨요.", "40번 부서에 속한 사원이 있나요?"],
-    explanation: "40번 부서는 EMP에 짝이 없어서 INNER JOIN 결과에서 빠집니다.",
+    stem: "EMP(부서 10, 20, NULL)와 DEPT(10, 20, 30)를 DEPTNO로 INNER JOIN 했을 때 결과에 나오지 않는 부서는?",
+    options: [{ text: "10", tag: "개념 부족" }, { text: "20", tag: "개념 부족" }, { text: "30" }, { text: "모두 나온다", tag: "개념 부족" }],
+    answer: 2,
+    hints: ["INNER JOIN은 양쪽에 짝이 있는 행만 남겨요.", "30번 부서에 속한 사원이 있나요?"],
+    explanation: "30번 부서는 EMP에 짝이 없어서 INNER JOIN 결과에서 빠집니다.",
   },
   {
     id: "q-outer-1",
@@ -189,7 +189,7 @@ export const QUESTIONS: Question[] = [
     type: "객관식",
     level: 2,
     family: "outer",
-    stem: "DEPT LEFT OUTER JOIN EMP 결과에서 기획(40) 부서 행의 ENAME 값은?",
+    stem: "DEPT LEFT OUTER JOIN EMP 결과에서 기획(30) 부서 행의 ENAME 값은?",
     options: [
       { text: "행이 나오지 않는다", tag: "개념 혼동", why: "INNER JOIN과 혼동했어요." },
       { text: "NULL" },
@@ -206,10 +206,10 @@ export const QUESTIONS: Question[] = [
     type: "OX",
     level: 3,
     family: "join-where",
-    stem: "DEPT D LEFT JOIN EMP E ON D.DEPTNO = E.DEPTNO WHERE E.JOB = 'DEV' 의 결과에는 기획(40) 부서가 포함된다.",
+    stem: "DEPT D LEFT JOIN EMP E ON D.DEPTNO = E.DEPTNO WHERE E.JOB = 'DEV' 의 결과에는 기획(30) 부서가 포함된다.",
     options: [{ text: "O", tag: "실행 순서 오류", why: "WHERE가 조인 뒤에 적용되는 걸 놓쳤어요." }, { text: "X" }],
     answer: 1,
-    hints: ["WHERE는 조인을 마친 뒤에 적용돼요.", "기획(40) 행의 E.JOB은 NULL이에요. NULL = 'DEV'는 참일까요?"],
+    hints: ["WHERE는 조인을 마친 뒤에 적용돼요.", "기획(30) 행의 E.JOB은 NULL이에요. NULL = 'DEV'는 참일까요?"],
     explanation: "조인 후 WHERE에서 E.JOB이 NULL인 행이 걸러지므로 기획 부서는 빠집니다.",
   },
 ];
@@ -360,4 +360,5 @@ export function variantOf(q: Question, exclude: string[] = []) {
   return pool.find((x) => x.family === q.family) ?? pool.find((x) => x.concept === q.concept);
 }
 
-export const DIAGNOSIS_SET = ["q-agg-1", "q-grp-1", "q-hav-1", "q-emp-1", "q-inner-1", "q-outer-1"];
+// 5 questions across the exam areas: aggregates, GROUP BY, HAVING, INNER and OUTER JOIN
+export const DIAGNOSIS_SET = ["q-agg-1", "q-grp-1", "q-hav-1", "q-inner-1", "q-outer-1"];

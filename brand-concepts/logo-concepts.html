@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pluck 로고 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    --green:#2fc287; --green-deep:#1fa36e; --mist:#e5f9f0; --wash:#f2fcf7;
+    --ink:#1b1c1d; --ink-soft:#3e4042; --slate:#6a7077; --hair:#e4e6e8; --gray:#f8f9fa; --paper:#fff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--gray);color:var(--ink);font-family:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 16px 64px}
+  h1{font-size:32px;font-weight:800;margin:0 0 6px;letter-spacing:-.02em}
+  .lead{color:var(--slate);margin:0 0 24px;font-size:15px;line-height:1.6}
+  .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px}
+  .key{background:var(--paper);border:1px solid var(--hair);border-radius:12px;padding:14px 16px}
+  .key b{display:block;font-size:15px;margin-bottom:4px}
+  .key span{font-size:13px;color:var(--slate);line-height:1.5}
+  .swatches{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+  .sw{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--hair);border-radius:999px;padding:6px 12px 6px 6px;font-size:12px;font-weight:600;color:var(--ink-soft)}
+  .sw i{width:20px;height:20px;border-radius:50%;display:block}
+  .card{background:var(--paper);border:1px solid var(--hair);border-radius:20px;overflow:hidden;margin-bottom:24px}
+  .card-head{display:flex;align-items:center;gap:10px;padding:20px 24px 0;flex-wrap:wrap}
+  .tag{font-size:12px;font-weight:700;color:var(--paper);background:var(--ink);border-radius:6px;padding:3px 8px}
+  .kw{font-size:12px;font-weight:700;color:#11704a;background:var(--mist);border-radius:6px;padding:3px 8px}
+  .pick{font-size:12px;font-weight:700;color:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:2px 7px}
+  .card-head h2{font-size:20px;font-weight:700;margin:0}
+  .desc{padding:8px 24px 0;color:var(--ink-soft);font-size:14px;line-height:1.65;margin:0}
+  .stage{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px;padding:20px 24px 24px}
+  .tile{border-radius:14px;display:flex;align-items:center;justify-content:center;min-height:180px;padding:20px}
+  .t-white{background:var(--paper);border:1px solid var(--hair)}
+  .t-mist{background:var(--mist)}
+  .t-ink{background:var(--ink)}
+  .sizes{display:flex;align-items:flex-end;gap:14px}
+  .wordmark{font-weight:800;letter-spacing:-.045em;line-height:1}
+  @media (max-width:760px){ .stage{grid-template-columns:1fr} .keys{grid-template-columns:1fr 1fr} }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- 플럭키 몸통: 꽃잎 다섯 개짜리 구름 -->
+    <symbol id="cloud" viewBox="0 0 100 100">
+      <circle cx="50" cy="40" r="21"/><circle cx="29" cy="55" r="19"/><circle cx="71" cy="55" r="19"/>
+      <circle cx="38" cy="73" r="18"/><circle cx="62" cy="73" r="18"/><circle cx="50" cy="60" r="22"/>
+    </symbol>
+    <symbol id="curl" viewBox="0 0 100 100">
+      <path d="M50 20 C50 12 48 7 43 6 C38 5 35 9 37 12.5 C39 16 44 15 44.5 11.5" fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <!-- A: 톡 따는 잎 -->
+    <symbol id="pluck" viewBox="0 0 100 100">
+      <path d="M36 94 C37 84 40 76 45 69" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+      <g transform="rotate(14 56 44)"><path d="M54 66 C34 52 36 26 66 12 C76 34 72 54 54 66Z" fill="currentColor"/></g>
+    </symbol>
+    <!-- B: 체크 새싹 (짧은 잎 + 긴 잎 = ✓) -->
+    <symbol id="check" viewBox="0 0 100 100">
+      <path d="M44 64 L44 90" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+      <path d="M44 64 C37 50 28 45 16 46 C20 58 31 64 44 64Z" fill="currentColor"/>
+      <path d="M44 64 C50 40 64 24 86 16 C86 40 70 60 44 64Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="leaf" viewBox="0 0 100 100">
+      <path d="M50 88 C24 66 26 30 66 14 C80 44 74 72 50 88Z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <h1>Pluck 로고 시안</h1>
+  <p class="lead">PRODUCT.md·DESIGN.md에 적힌 서비스 성격에서 키워드 네 개를 뽑고, 시안마다 하나씩 맡겼어요.<br>
+  색은 메인 컬러 Sprout Green(#2fc287) 한 가지만 썼고, 이름은 서비스 후보인 <b>pluck</b>로 넣었어요.</p>
+
+  <div class="keys">
+    <div class="key"><b>꺼내먹기</b><span>답을 받아먹지 않고, 머릿속에서 스스로 꺼내 본다</span></div>
+    <div class="key"><b>확인과 증거</b><span>설명 뒤엔 확인 문제. 초록은 "스스로 해냈다는 증거"</span></div>
+    <div class="key"><b>옆자리 파트너</b><span>AI는 한가운데가 아니라 옆에서 짧게 돕는다</span></div>
+    <div class="key"><b>조용한 자습실</b><span>흰 종이, 장식은 거의 없이, 초록 한 가지</span></div>
+  </div>
+
+  <div class="swatches">
+    <span class="sw"><i style="background:#2fc287"></i>Sprout Green #2fc287</span>
+    <span class="sw"><i style="background:#1fa36e"></i>Green Deep #1fa36e</span>
+    <span class="sw"><i style="background:#e5f9f0;border:1px solid #d3eee2"></i>Green Mist #e5f9f0</span>
+    <span class="sw"><i style="background:#1b1c1d"></i>Ink #1b1c1d</span>
+  </div>
+
+  <!-- A 꺼내먹기 -->
+  <section class="card">
+    <div class="card-head"><span class="tag">A</span><h2>톡 따는 잎</h2><span class="kw">꺼내먹기</span><span class="pick">추천</span></div>
+    <p class="desc">줄기에서 잎이 막 떨어지는 순간이에요. 잎을 따는 손은 그리지 않았어요. 따는 사람은 학습자 자신이라서요. "답을 주는 AI가 아니라, 스스로 꺼내게 돕는 AI"라는 포지셔닝과 이름 뜻이 한 그림에 겹쳐서 가장 설명하기 쉬운 안이에요.</p>
+    <div class="stage">
+      <div class="tile t-white">
+        <div style="display:flex;align-items:center;gap:12px;color:#2fc287">
+          <svg width="64" height="64" viewBox="0 0 100 100"><use href="#pluck"/><path d="M80 54 L88 58 M78 64 L86 70" stroke="#1fa36e" stroke-width="4" stroke-linecap="round"/></svg>
+          <span class="wordmark" style="font-size:46px;color:#1b1c1d">pluck</span>
+        </div>
+      </div>
+      <div class="tile t-mist">
+        <svg width="120" height="120" viewBox="0 0 100 100" style="color:#fff">
+          <rect width="100" height="100" rx="24" fill="#2fc287"/>
+          <g transform="translate(14 12) scale(.74)"><use href="#pluck" width="100" height="100"/></g>
+        </svg>
+      </div>
+      <div class="tile t-ink">
+        <div class="sizes" style="color:#2fc287">
+          <svg width="48" height="48" viewBox="0 0 100 100"><use href="#pluck"/></svg>
+          <svg width="32" height="32" viewBox="0 0 100 100"><use href="#pluck"/></svg>
+          <svg width="16" height="16" viewBox="0 0 100 100"><use href="#pluck"/></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- B 확인과 증거 -->
+  <section class="card">
+    <div class="card-head"><span class="tag">B</span><h2>체크 새싹</h2><span class="kw">확인과 증거</span></div>
+    <p class="desc">짧은 잎과 긴 잎이 모여 체크(✓) 모양이 되는 새싹이에요. 서비스 안에서 초록이 "완료 체크·정답"에 쓰이는 것과 그대로 이어져서, 로고를 보면 "이해했는지 확인하는 곳"이 떠올라요. 작게 줄여도 형태가 가장 잘 버티는 안.</p>
+    <div class="stage">
+      <div class="tile t-white">
+        <div style="display:flex;align-items:center;gap:10px;color:#2fc287">
+          <svg width="64" height="64" viewBox="0 0 100 100"><use href="#check"/><path d="M48 60 C58 46 68 32 80 22" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+          <span class="wordmark" style="font-size:46px;color:#1b1c1d">pluck</span>
+        </div>
+      </div>
+      <div class="tile t-mist">
+        <svg width="120" height="120" viewBox="0 0 100 100" style="color:#fff">
+          <rect width="100" height="100" rx="24" fill="#2fc287"/>
+          <g transform="translate(14 12) scale(.74)"><use href="#check" width="100" height="100"/></g>
+        </svg>
+      </div>
+      <div class="tile t-ink">
+        <div class="sizes" style="color:#2fc287">
+          <svg width="48" height="48" viewBox="0 0 100 100"><use href="#check"/></svg>
+          <svg width="32" height="32" viewBox="0 0 100 100"><use href="#check"/></svg>
+          <svg width="16" height="16" viewBox="0 0 100 100"><use href="#check"/></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- C 옆자리 파트너 -->
+  <section class="card">
+    <div class="card-head"><span class="tag">C</span><h2>플럭키 얼굴</h2><span class="kw">옆자리 파트너</span></div>
+    <p class="desc">구름 몸통에 눈만 넣었어요. 입을 뺀 건 "말이 많은 AI"가 아니라 옆에서 지켜보다 부르면 돕는 파트너라서예요. 앱 아이콘·AI 패널 버튼처럼 "AI를 부르는 자리"에 가장 잘 맞고, 브랜드 첫인상이 캐릭터가 돼요.</p>
+    <div class="stage">
+      <div class="tile t-white">
+        <div style="display:flex;align-items:center;gap:12px">
+          <svg width="64" height="64" viewBox="0 0 100 100"><use href="#cloud" fill="#2fc287"/><use href="#curl" stroke="#2fc287"/><ellipse cx="42" cy="56" rx="5" ry="6.6" fill="#1b1c1d"/><ellipse cx="58" cy="56" rx="5" ry="6.6" fill="#1b1c1d"/><circle cx="43.6" cy="53.6" r="1.6" fill="#fff"/><circle cx="59.6" cy="53.6" r="1.6" fill="#fff"/></svg>
+          <span class="wordmark" style="font-size:46px;color:#1b1c1d">pluck</span>
+        </div>
+      </div>
+      <div class="tile t-mist">
+        <svg width="120" height="120" viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="24" fill="#2fc287"/>
+          <g transform="translate(14 16) scale(.72)"><use href="#cloud" width="100" height="100" fill="#fff"/><use href="#curl" width="100" height="100" stroke="#fff"/></g>
+          <ellipse cx="42" cy="57" rx="4.6" ry="6" fill="#1b1c1d"/><ellipse cx="58" cy="57" rx="4.6" ry="6" fill="#1b1c1d"/>
+          <circle cx="43.4" cy="54.8" r="1.5" fill="#fff"/><circle cx="59.4" cy="54.8" r="1.5" fill="#fff"/>
+        </svg>
+      </div>
+      <div class="tile t-ink">
+        <div class="sizes">
+          <svg width="48" height="48" viewBox="0 0 100 100"><use href="#cloud" fill="#2fc287"/><use href="#curl" stroke="#2fc287"/><ellipse cx="42" cy="56" rx="5" ry="6.6" fill="#1b1c1d"/><ellipse cx="58" cy="56" rx="5" ry="6.6" fill="#1b1c1d"/></svg>
+          <svg width="32" height="32" viewBox="0 0 100 100"><use href="#cloud" fill="#2fc287"/><use href="#curl" stroke="#2fc287"/><ellipse cx="42" cy="56" rx="5.5" ry="7" fill="#1b1c1d"/><ellipse cx="58" cy="56" rx="5.5" ry="7" fill="#1b1c1d"/></svg>
+          <svg width="16" height="16" viewBox="0 0 100 100"><use href="#cloud" fill="#2fc287"/><ellipse cx="41" cy="56" rx="7" ry="9" fill="#1b1c1d"/><ellipse cx="59" cy="56" rx="7" ry="9" fill="#1b1c1d"/></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- D 조용한 자습실 -->
+  <section class="card">
+    <div class="card-head"><span class="tag">D</span><h2>워드마크 + 떨어진 잎</h2><span class="kw">조용한 자습실</span></div>
+    <p class="desc">심볼 없이 글자만 쓰고, k 끝에서 잎 하나가 톡 떨어져 나왔어요. 장식을 거의 빼고 초록은 잎 한 점에만 써서, 화면에서 초록을 아껴 쓰는 서비스 규칙과 같아요. 헤더처럼 가로로 긴 자리에 가장 조용하게 앉아요.</p>
+    <div class="stage">
+      <div class="tile t-white">
+        <div style="display:flex;align-items:flex-start">
+          <span class="wordmark" style="font-size:58px;color:#1b1c1d">pluck</span>
+          <svg width="26" height="26" viewBox="0 0 100 100" style="margin:-6px 0 0 2px;transform:rotate(18deg)"><use href="#leaf" fill="#2fc287"/></svg>
+        </div>
+      </div>
+      <div class="tile t-mist">
+        <div style="display:flex;align-items:flex-start">
+          <span class="wordmark" style="font-size:40px;color:#1b1c1d">pluck</span>
+          <svg width="18" height="18" viewBox="0 0 100 100" style="margin:-4px 0 0 2px;transform:rotate(18deg)"><use href="#leaf" fill="#1fa36e"/></svg>
+        </div>
+      </div>
+      <div class="tile t-ink">
+        <div style="display:flex;align-items:flex-start">
+          <span class="wordmark" style="font-size:40px;color:#fff">pluck</span>
+          <svg width="18" height="18" viewBox="0 0 100 100" style="margin:-4px 0 0 2px;transform:rotate(18deg)"><use href="#leaf" fill="#2fc287"/></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

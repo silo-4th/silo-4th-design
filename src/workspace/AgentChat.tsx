@@ -40,11 +40,6 @@ const QUICK = [
   { title: "헷갈리는 개념 비교해줘", desc: "WHERE와 HAVING처럼", icon: "compare" as const },
 ];
 
-/** "조하늘" → "하늘": a friendlier greeting uses the given name when the full name has a surname in front. */
-function firstName(name?: string) {
-  if (!name) return "";
-  return name.length >= 3 && !/\s/.test(name) ? name.slice(1) : name;
-}
 
 export function AgentChat({ material, section, command }: { material: Material; section?: Section; command: Command | null }) {
   const { state, dispatch } = useStore();
@@ -124,7 +119,7 @@ export function AgentChat({ material, section, command }: { material: Material; 
           {msgs.length === 0 && (
             <div className="welcome">
               <Mascot size={112} live />
-              <p className="welcome-hi">{state.user ? `${firstName(state.user.name)}님, ` : "반가워요! "}저와 함께 쉽게 공부해요!</p>
+              <p className="welcome-hi">{state.user ? `${state.user.name}님, ` : "반가워요! "}저와 함께 쉽게 공부해요!</p>
               <h3 className="welcome-title">오늘은 무엇부터 해볼까요?</h3>
               <div className="quick-grid">
                 {QUICK.map(({ title, desc, icon }) => (

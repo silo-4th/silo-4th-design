@@ -129,7 +129,7 @@ export function Workspace() {
           <button className="peek" aria-label="AI 패널 열기" onClick={() => setOpen(true)}>
             <span className="peek-bubble" aria-hidden>궁금한 거 있어?</span>
             <span className="peek-clip">
-              <span className="peek-body"><Mascot size={104} /></span>
+              <span className="peek-body"><Mascot size={104} mood="zip" hoverMood="cat" /></span>
             </span>
           </button>
         )}
@@ -157,18 +157,20 @@ export function Workspace() {
                   <Menu size={18} />
                 </button>
                 <div className="panel-tools-end">
-                  <button
-                    className="tool-btn"
-                    aria-label="새 대화"
-                    disabled={!hasChat}
-                    title={hasChat ? "새 대화" : "지금이 새 대화예요"}
-                    onClick={() => {
-                      dispatch({ type: "newChat", materialId: material.id });
-                      toast("새 대화를 시작했어요. 지난 대화는 대화 기록에 있어요.");
-                    }}
-                  >
-                    <SquarePen size={17} />
-                  </button>
+                  {/* 새 대화 only once there is a conversation (the empty start screen already is a new chat) */}
+                  {hasChat && (
+                    <button
+                      className="tool-btn"
+                      aria-label="새 대화"
+                      title="새 대화"
+                      onClick={() => {
+                        dispatch({ type: "newChat", materialId: material.id });
+                        toast("새 대화를 시작했어요. 지난 대화는 대화 기록에 있어요.");
+                      }}
+                    >
+                      <SquarePen size={17} />
+                    </button>
+                  )}
                   {hasChat && <ToneMenu />}
                 </div>
               </div>

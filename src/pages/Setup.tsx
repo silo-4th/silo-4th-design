@@ -1,137 +1,116 @@
-import { ArrowRight, CalendarDays, Clock, FileText } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mascot } from "../components/Brand";
-import { QuizCard, type QuizResult } from "../components/QuizCard";
-import { CONCEPTS, EXAM } from "../data/materials";
+import { type QuizResult } from "../components/QuizCard";
+import { ConfRow } from "./Recall";
+import { CONCEPTS, EXAM, getMaterial } from "../data/materials";
 import { DIAGNOSIS_SET, getQuestion } from "../data/questions";
 import { joinWa } from "../lib/josa";
-import { daysUntil, useStore } from "../store";
+import { tagFor, useStore, type Confidence } from "../store";
 import { HOME } from "../App";
-
-const TIMES = [10, 20, 30, 60];
 
 export function Setup() {
   const { state, dispatch } = useStore();
   const nav = useNavigate();
-  const [step, setStep] = useState(0);
-  const [minutes, setMinutes] = useState(30);
+  // first visit: no exam picker any more — go straight to a short skill check in the 꺼내 보기 layout
+  const [step, setStep] = useState<"intro" | "quiz" | "done">("intro");
+  // daily study time is no longer asked during setup; keep the default plan length
+  const minutes = 30;
   const [idx, setIdx] = useState(0);
   const [results, setResults] = useState<QuizResult[]>([]);
-  const [answered, setAnswered] = useState(false);
-  const dday = daysUntil(EXAM.date);
+  const total = DIAGNOSIS_SET.length;
 
   const finish = (diagnosed: boolean) => {
     dispatch({ type: "setup", dailyMinutes: minutes, diagnosed });
     nav(HOME);
   };
+  const record = (r: QuizResult, picked: number) => {
+    dispatch({ type: "attempt", attempt: { qid: r.qid, correct: r.correct, confidence: r.confidence, hints: 0, source: "diagnosis" }, picked });
+    setResults((rs) => [...rs, r]);
+    if (idx + 1 < total) setIdx(idx + 1);
+    else setStep("done");
+  };
 
   return (
-    <main className="setup">
-      <div className="steps" aria-hidden>
-        {[0, 1, 2, 3].map((i) => <i key={i} className={i <= step ? "on" : ""} />)}
-      </div>
-
-      {step === 0 && (
-        <>
-          <span className="subtle">1 / 4 · 시험과 목표</span>
-          <h1>{state.user?.name}님, 어떤 시험을 준비하나요?</h1>
-          <p className="muted">시험일과 출제 범위는 공식 안내를 기준으로 정리했어요. AI가 임의로 정하지 않아요.</p>
-          <div className="card" style={{ borderColor: "var(--color-green)", background: "var(--color-green-25)", marginTop: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <span className="strong" style={{ fontSize: 18 }}>{EXAM.name} {EXAM.round}</span>
-              <span className="chip chip-green">D-{dday}</span>
+    <main className="recall">
+      <section className="recall-frame">
+        <div className="recall-bar">
+          <span className="recall-bar-title">실력 진단</span>
+          {step === "quiz" && <span className="recall-bar-count">{idx + 1} / {total}</span>}
+        </div>
+        {step === "quiz" && (
+          <div className="recall-steps" role="progressbar" aria-label="실력 진단 진행" aria-valuemin={1} aria-valuemax={total} aria-valuenow={idx + 1}>
+            {DIAGNOSIS_SET.map((_, k) => <i key={k} className={k < idx ? "on" : k === idx ? "now" : ""} />)}
+          </div>
+        )}
+        <div className="recall-body">
+          {step === "intro" && (
+            <div className="recall-col">
+              <h1 className="recall-title">{state.user?.name}님, 실력부터 짧게 진단해 볼게요</h1>
+              <p className="recall-sub">{EXAM.name} 단원별 대표 문제 {total}개예요. 힌트 없이 풀고, 얼마나 확신했는지도 알려주세요</p>
+              <div className="recall-list">
+                {DIAGNOSIS_SET.map((qid, k) => {
+                  const c = CONCEPTS[getQuestion(qid)!.concept];
+                  return (
+                    <div key={qid} className="recall-row">
+                      <span className="recall-row-name">{k + 1}. {c.name}</span>
+                      <span className="recall-row-src">{getMaterial(c.material)?.title}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="recall-cta">
+                {/* skipping is a real choice here, so it gets a button (quieter than 시작하기) instead of a text link */}
+                <div className="setup-cta-pair">
+                  <button className="btn btn-lg btn-block" onClick={() => finish(false)}>건너뛰기</button>
+                  <button className="btn btn-dark btn-lg btn-block" onClick={() => setStep("quiz")}>시작하기</button>
+                </div>
+              </div>
             </div>
-            <div className="grid g-2" style={{ gap: 10 }}>
-              <div className="list-row" style={{ padding: 0 }}><CalendarDays size={16} className="muted" />시험일 2026. 11. 14 (토)</div>
-              <div className="list-row" style={{ padding: 0, borderTop: 0 }}><Clock size={16} className="muted" />90분 · 50문항</div>
-            </div>
-            <table className="tbl" style={{ marginTop: 14, background: "#fff", borderRadius: 8 }}>
-              <thead><tr><th>과목</th><th>문항</th><th>배점</th></tr></thead>
-              <tbody>
-                {EXAM.subjects.map((s) => (
-                  <tr key={s.name}><td>{s.name}</td><td>{s.questions}</td><td>{s.weight}점</td></tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="subtle" style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 4 }}>
-              <FileText size={12} />합격 기준 총점 {EXAM.passLine}점 이상, 과목별 {EXAM.cutLine}% 미만 과락 · 출처: 한국데이터산업진흥원 시험 안내
-            </div>
-          </div>
-          <button className="choice" style={{ marginTop: 10 }} disabled>
-            <span className="muted">다른 시험 · 시험 안내나 교재 목차를 올리면 AI가 범위를 구조화해요 (준비 중)</span>
-          </button>
-          <button className="btn btn-primary btn-lg btn-block" style={{ marginTop: 28 }} onClick={() => setStep(1)}>
-            이 시험으로 시작하기
-          </button>
-        </>
-      )}
-
-      {step === 1 && (
-        <>
-          <span className="subtle">2 / 4 · 공부 시간</span>
-          <h1>하루에 얼마나 공부할 수 있나요?</h1>
-          <p className="muted">남은 {dday}일 동안 매일 이 시간에 맞춰 오늘의 학습을 구성해요. 언제든 바꿀 수 있어요.</p>
-          <div className="grid g-2" style={{ marginTop: 20 }}>
-            {TIMES.map((t) => (
-              <button key={t} className={`choice ${minutes === t ? "on" : ""}`} onClick={() => setMinutes(t)}>
-                <Clock size={18} color={minutes === t ? "var(--color-green)" : "var(--color-gray-3)"} />
-                <span>
-                  <span className="strong">{t}분</span>
-                  <span className="subtle" style={{ display: "block" }}>
-                    {t === 10 ? "오답 복습 위주" : t === 20 ? "취약 개념 + 복습" : t === 30 ? "개념 + 확인 문제 + 복습" : "새 단원 + 모의 문제"}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
-          <button className="btn btn-primary btn-lg btn-block" style={{ marginTop: 28 }} onClick={() => setStep(2)}>다음</button>
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          <span className="subtle">3 / 4 · 현재 위치 진단 · {idx + 1} / {DIAGNOSIS_SET.length}</span>
-          <h1>짧게 실력을 확인해볼게요</h1>
-          <p className="muted">단원별 대표 문제 {DIAGNOSIS_SET.length}개예요. 힌트 없이 풀고, 얼마나 확신했는지도 알려주세요.</p>
-          <div className="card" style={{ marginTop: 20 }}>
-            <QuizCard
-              key={DIAGNOSIS_SET[idx]}
-              qid={DIAGNOSIS_SET[idx]}
-              source="diagnosis"
-              hints={false}
-              showExplain={false}
-              onAnswered={(r) => {
-                setResults((rs) => [...rs, r]);
-                setAnswered(true);
-              }}
-            />
-          </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-            <button className="btn btn-ghost" onClick={() => finish(false)}>진단 건너뛰기</button>
-            <button
-              className="btn btn-primary"
-              style={{ marginLeft: "auto" }}
-              disabled={!answered}
-              onClick={() => {
-                setAnswered(false);
-                if (idx + 1 < DIAGNOSIS_SET.length) setIdx(idx + 1);
-                else setStep(3);
-              }}
-            >
-              {idx + 1 < DIAGNOSIS_SET.length ? "다음 문제" : "결과 보기"}
-              <ArrowRight size={16} />
-            </button>
-          </div>
-        </>
-      )}
-
-      {step === 3 && <DiagnosisResult results={results} minutes={minutes} onStart={() => finish(true)} />}
+          )}
+          {step === "quiz" && <DiagnosisStep key={idx} qid={DIAGNOSIS_SET[idx]} last={idx + 1 === total} onDone={record} />}
+          {step === "done" && <DiagnosisResult results={results} onStart={() => finish(true)} />}
+        </div>
+      </section>
     </main>
   );
 }
 
-function DiagnosisResult({ results, minutes, onStart }: { results: QuizResult[]; minutes: number; onStart: () => void }) {
+/** One diagnosis question, drawn exactly like a 꺼내 보기 choice question. */
+function DiagnosisStep({ qid, last, onDone }: { qid: string; last: boolean; onDone: (r: QuizResult, picked: number) => void }) {
+  const q = getQuestion(qid)!;
+  const [picked, setPicked] = useState<number | null>(null);
+  const [conf, setConf] = useState<Confidence | null>(null);
+  const letters = q.type === "OX" ? ["O", "X"] : ["A", "B", "C", "D"];
+  const ready = picked !== null && conf !== null;
+  const next = () => {
+    if (picked === null || conf === null) return;
+    const correct = picked === q.answer;
+    onDone({ qid, correct, confidence: conf, tag: tagFor(correct, conf, q.options[picked]?.tag) }, picked);
+  };
+
+  return (
+    <div className="recall-col">
+      <span className="chip recall-from">{CONCEPTS[q.concept].name}</span>
+      <p className="q-stem">{q.stem}</p>
+      {q.code && <pre className="q-code mono">{q.code}</pre>}
+      <div className="opts" role="radiogroup" aria-label="보기">
+        {q.options.map((o, k) => (
+          <button key={k} className={`opt ${picked === k ? "sel" : ""}`} role="radio" aria-checked={picked === k} onClick={() => setPicked(k)}>
+            <span className="k">{letters[k]}</span>
+            <span className={o.text.includes("SELECT") ? "mono" : ""} style={{ fontSize: o.text.includes("SELECT") ? 12.5 : undefined }}>{o.text}</span>
+          </button>
+        ))}
+      </div>
+      <ConfRow q="고른 답, 얼마나 확실해요?" off={picked === null} value={conf} onChange={setConf} />
+      <div className="recall-cta">
+        <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={next}>{last ? "결과 보기" : "다음"}</button>
+      </div>
+    </div>
+  );
+}
+
+function DiagnosisResult({ results, onStart }: { results: QuizResult[]; onStart: () => void }) {
   const correct = results.filter((r) => r.correct).length;
   const solid = results.filter((r) => r.correct && r.confidence === "sure").length;
   const shaky = correct - solid;
@@ -142,8 +121,7 @@ function DiagnosisResult({ results, minutes, onStart }: { results: QuizResult[];
 
   return (
     <>
-      <span className="subtle">4 / 4 · 진단 결과</span>
-      <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "8px 0 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "8px 0 20px" }}>
         <Mascot size={64} mood={pass ? "smile" : "think"} />
         <h1 style={{ margin: 0 }}>합격 예상 점수는 {expected}점이에요</h1>
       </div>
@@ -169,7 +147,7 @@ function DiagnosisResult({ results, minutes, onStart }: { results: QuizResult[];
         })}
       </div>
       <div className="card" style={{ marginTop: 12 }}>
-        <div className="card-head"><h3>내일까지 이렇게 해봐요 · 하루 {minutes}분</h3></div>
+        <div className="card-head"><h3>내일까지 이렇게 해봐요</h3></div>
         <p className="muted" style={{ margin: 0 }}>
           약한 개념이 있는 <b style={{ color: "var(--color-ink)" }}>GROUP BY와 HAVING</b> 자료부터 읽고, 구간마다 확인 문제를 풀어요. 틀리거나 확신이 낮았던 문제는 내일 복습 목록에 자동으로 들어가요.
         </p>

@@ -1,4 +1,5 @@
 import { MessageCircle, X } from "lucide-react";
+import { listDate } from "../lib/listDate";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMaterial, type Material } from "../data/materials";
@@ -11,10 +12,6 @@ function titleOf(msgs: ChatMsg[], fallback: string) {
 }
 
 /** "11월 5일" — the day is what tells conversations apart once the list spans weeks. */
-function dateOf(at: number) {
-  const d = new Date(at);
-  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
-}
 
 /** Slide-in conversation history: the current chat on top, earlier ones stacked below, newest first. */
 export function PanelMenu({ material, onClose }: { material: Material; onClose: () => void }) {
@@ -66,7 +63,7 @@ export function PanelMenu({ material, onClose }: { material: Material; onClose: 
                   <span className="menu-title">{titleOf(h.messages, m?.title ?? "대화")}</span>
                   <span className="menu-meta">{m?.title ?? "삭제된 자료"}</span>
                 </span>
-                <span className="menu-date">{dateOf(h.at)}</span>
+                <span className="menu-date">{listDate(h.at)}</span>
               </button>
             );
           })}

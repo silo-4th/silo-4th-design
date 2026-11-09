@@ -247,58 +247,1379 @@ export const MATERIALS: Material[] = [
     title: "JOIN 기본",
     subject: "2과목 · SQL 기본 및 활용",
     chapter: "2장 5절",
-    minutes: 30,
+    minutes: 45,
     sections: [
       {
-        id: "intro",
-        title: "인트로",
-        blocks: [
-          { kind: "h2", text: "이 단원에서 배우는 것" },
+        "id": "intro",
+        "title": "인트로",
+        "blocks": [
           {
-            kind: "ul",
-            items: [
-              "INNER JOIN이 어떤 행만 남기는지 설명할 수 있어요.",
-              "LEFT OUTER JOIN에서 짝이 없는 행이 어떻게 표시되는지 예측할 수 있어요.",
-              "ON 조건과 WHERE 조건의 차이를 OUTER JOIN 결과로 설명할 수 있어요.",
+            "kind": "h2",
+            "text": "이 단원에서 배우는 것"
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "EQUI JOIN과 NON-EQUI JOIN의 차이를 설명하고, 조인 키가 NULL이거나 범위에 맞지 않는 행이 왜 빠지는지 설명할 수 있어요.",
+              "테이블 N개를 조인할 때 필요한 최소 조인 조건 수(N−1)를 알고, 조건이 빠졌을 때 늘어나는 행 수를 계산할 수 있어요.",
+              "Oracle `(+)` 문법에서 `(+)`의 위치를 보고 어느 쪽 행이 모두 남는지 예측할 수 있어요.",
+              "INNER, CROSS, NATURAL, USING, ON 조인의 문법 규칙(접두사, SELECT * 컬럼 수)을 설명할 수 있어요.",
+              "LEFT / RIGHT / FULL OUTER JOIN의 결과 행 수를 예측할 수 있어요.",
+              "OUTER JOIN에서 조건을 ON에 둘 때와 WHERE에 둘 때 결과가 어떻게 달라지는지 예측할 수 있어요."
+            ]
+          },
+          {
+            "kind": "h2",
+            "text": "개념 한눈에 보기"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "개념",
+              "한 줄 정리"
             ],
+            "rows": [
+              [
+                "EQUI JOIN (등가 조인)",
+                "두 테이블의 컬럼 값이 `=`로 같은 행끼리 붙여요. 조인 키가 NULL인 행은 빠져요"
+              ],
+              [
+                "NON-EQUI JOIN (비등가 조인)",
+                "`=`가 아니라 BETWEEN, >, < 같은 조건으로 붙여요. 급여 등급 테이블이 대표 예예요"
+              ],
+              [
+                "조인 조건 N−1개와 카테시안 곱",
+                "테이블 N개는 조인 조건이 최소 N−1개 필요해요. 빠지면 행 수가 곱으로 늘어나요"
+              ],
+              [
+                "Oracle (+) OUTER JOIN",
+                "NULL로 채워질 쪽 컬럼에 `(+)`를 붙이면, 반대쪽 행이 모두 남아요. Oracle 전용 문법이에요"
+              ],
+              [
+                "INNER JOIN, CROSS JOIN과 ON 절",
+                "표준 문법은 FROM 절에 `JOIN … ON 조건`을 써요. CROSS JOIN은 모든 조합을 만들어요"
+              ],
+              [
+                "NATURAL JOIN과 USING 절",
+                "이름이 같은 컬럼으로 조인해요. 공통 컬럼은 결과에 한 번만 나오고, 접두사를 붙일 수 없어요"
+              ],
+              [
+                "LEFT / RIGHT / FULL OUTER JOIN",
+                "기준 쪽 행은 짝이 없어도 남기고, 반대쪽을 NULL로 채워요. FULL은 양쪽 모두 남겨요"
+              ],
+              [
+                "OUTER JOIN에서 ON과 WHERE",
+                "안쪽 테이블 조건을 ON에 두면 기준 행이 남고, WHERE에 두면 NULL 행이 지워져 INNER JOIN처럼 돼요"
+              ]
+            ]
           },
           {
-            kind: "table",
-            caption: "DEPT",
-            head: ["DEPTNO", "DNAME"],
-            rows: [["10", "경영"], ["20", "영업"], ["30", "개발"], ["40", "기획"]],
+            "kind": "h2",
+            "text": "이 단원에서 쓰는 데이터"
           },
-        ],
+          {
+            "kind": "p",
+            "text": "이 단원에서는 테이블 세 개를 써요. 아래는 이 단원에 필요한 컬럼만 뽑은 거예요."
+          },
+          {
+            "kind": "h3",
+            "text": "부서 테이블 `DEPT`"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "DEPTNO (부서 번호)",
+              "DNAME (부서 이름)",
+              "LOC (위치)"
+            ],
+            "rows": [
+              [
+                "10",
+                "개발",
+                "서울"
+              ],
+              [
+                "20",
+                "영업",
+                "부산"
+              ],
+              [
+                "30",
+                "기획",
+                "서울"
+              ]
+            ]
+          },
+          {
+            "kind": "h3",
+            "text": "사원 테이블 `EMP`"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "EMPNO (사원 번호)",
+              "ENAME (이름)",
+              "SAL (급여)",
+              "DEPTNO (부서)"
+            ],
+            "rows": [
+              [
+                "1001",
+                "김대표",
+                "9000",
+                "10"
+              ],
+              [
+                "1002",
+                "이개발",
+                "6000",
+                "10"
+              ],
+              [
+                "1003",
+                "박영업",
+                "6000",
+                "20"
+              ],
+              [
+                "1004",
+                "최코드",
+                "4000",
+                "10"
+              ],
+              [
+                "1005",
+                "정코드",
+                "4000",
+                "10"
+              ],
+              [
+                "1006",
+                "한세일",
+                "3500",
+                "20"
+              ],
+              [
+                "1007",
+                "윤세일",
+                "3000",
+                "20"
+              ],
+              [
+                "1008",
+                "강신입",
+                "3000",
+                "10"
+              ],
+              [
+                "1009",
+                "조미정",
+                "2800",
+                "NULL"
+              ],
+              [
+                "1010",
+                "서인턴",
+                "NULL",
+                "10"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "EMP에는 이 밖에도 JOB(직무), MGR(상사 번호), HIREDATE(입사일), COMM(수당) 컬럼이 있어요. EMP는 모두 8개 컬럼이고, DEPT는 3개 컬럼이에요. 이 숫자는 6번 설명에서 다시 써요."
+          },
+          {
+            "kind": "h3",
+            "text": "급여 등급 테이블 `SALGRADE`"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "GRADE (등급)",
+              "LOSAL (최저 급여)",
+              "HISAL (최고 급여)"
+            ],
+            "rows": [
+              [
+                "1",
+                "0",
+                "2999"
+              ],
+              [
+                "2",
+                "3000",
+                "3999"
+              ],
+              [
+                "3",
+                "4000",
+                "5999"
+              ],
+              [
+                "4",
+                "6000",
+                "9999"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "조인 결과의 행 수를 바꾸는 함정이 데이터에 일부러 들어 있어요. 아래 세 가지를 기억해 두면 예제를 따라가기 쉬워요."
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "**조미정**은 부서(DEPTNO)가 NULL이에요. 어느 부서와도 짝이 맞지 않아요.",
+              "**서인턴**은 급여(SAL)가 NULL이에요. 어느 급여 등급에도 들어가지 않아요.",
+              "**30번 기획** 부서에는 사원이 한 명도 없어요. EMP 쪽에 짝이 없어요."
+            ]
+          }
+        ]
       },
       {
-        id: "inner",
-        title: "1. INNER JOIN",
-        concept: "inner_join",
-        blocks: [
-          { kind: "p", text: "INNER JOIN은 두 테이블에서 조인 조건이 맞는 행끼리만 붙여요. 짝이 없는 행은 결과에서 사라져요." },
-          { kind: "code", text: "SELECT E.ENAME, D.DNAME\n  FROM EMP E INNER JOIN DEPT D\n    ON E.DEPTNO = D.DEPTNO;" },
-          { kind: "p", text: "DEPT의 40번(기획)은 소속 사원이 없어서 결과에 나오지 않아요." },
-        ],
+        "id": "equi",
+        "title": "1. EQUI JOIN (등가 조인)",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "조인(JOIN)은 여러 테이블의 행을 조건에 맞춰 옆으로 이어 붙이는 거예요. 1번부터 4번까지는 Oracle의 전통 문법으로 배워요. 전통 문법은 FROM에 테이블을 쉼표로 나열하고, 조인 조건을 WHERE에 써요."
+          },
+          {
+            "kind": "p",
+            "text": "조인 조건이 `=`이면 EQUI JOIN(등가 조인)이라고 해요. 보통 한 테이블의 기본키(PK)와 다른 테이블의 외래키(FK)를 연결해요. 여기서는 EMP.DEPTNO(외래키)와 DEPT.DEPTNO(기본키)를 연결해요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT E.ENAME, E.DEPTNO, D.DNAME\nFROM EMP E, DEPT D\nWHERE E.DEPTNO = D.DEPTNO\nORDER BY E.EMPNO;"
+          },
+          {
+            "kind": "p",
+            "text": "`EMP E`의 E는 테이블 별칭이에요. 별칭을 붙이면 `E.DEPTNO`처럼 어느 테이블의 컬럼인지 짧게 적을 수 있어요."
+          },
+          {
+            "kind": "table",
+            "head": [
+              "ENAME",
+              "DEPTNO",
+              "DNAME"
+            ],
+            "rows": [
+              [
+                "김대표",
+                "10",
+                "개발"
+              ],
+              [
+                "이개발",
+                "10",
+                "개발"
+              ],
+              [
+                "박영업",
+                "20",
+                "영업"
+              ],
+              [
+                "최코드",
+                "10",
+                "개발"
+              ],
+              [
+                "정코드",
+                "10",
+                "개발"
+              ],
+              [
+                "한세일",
+                "20",
+                "영업"
+              ],
+              [
+                "윤세일",
+                "20",
+                "영업"
+              ],
+              [
+                "강신입",
+                "10",
+                "개발"
+              ],
+              [
+                "서인턴",
+                "10",
+                "개발"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "결과는 9행이에요. 하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "EMP의 10행 하나하나에 대해 DEPTNO가 같은 DEPT 행을 찾아요. 10번 부서 사원 6명은 '개발'에, 20번 부서 사원 3명은 '영업'에 붙어요.",
+              "조미정은 DEPTNO가 NULL이에요. `NULL = 10`은 참(TRUE)이 아니라 UNKNOWN(알 수 없음)이 돼요. 조건이 참인 행만 남기 때문에 조미정은 어느 부서와도 붙지 않고 빠져요.",
+              "30번 기획 부서는 DEPTNO가 30인 사원이 없어서 결과에 나오지 않아요.",
+              "그래서 사원 10명이 아니라 9행이에요. 서인턴은 급여가 NULL이지만, 이번 조인은 급여를 쓰지 않으니 그대로 남아요."
+            ]
+          }
+        ]
       },
       {
-        id: "outer",
-        title: "2. OUTER JOIN",
-        concept: "outer_join",
-        blocks: [
-          { kind: "p", text: "LEFT OUTER JOIN은 왼쪽 테이블의 행을 모두 남기고, 오른쪽에 짝이 없으면 오른쪽 컬럼을 NULL로 채워요." },
-          { kind: "code", text: "SELECT D.DNAME, E.ENAME\n  FROM DEPT D LEFT OUTER JOIN EMP E\n    ON D.DEPTNO = E.DEPTNO;" },
-          { kind: "p", text: "기획(40)은 사원이 없지만 결과에 남고, ENAME은 NULL로 나와요." },
-        ],
+        "id": "nonequi",
+        "title": "2. NON-EQUI JOIN (비등가 조인)",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "두 테이블에 같은 값이 없어서 \"범위 안에 드는지\"로 연결해야 할 때가 있어요. 이렇게 `=`가 아닌 조건(BETWEEN, >, < 등)으로 붙이는 조인을 NON-EQUI JOIN(비등가 조인)이라고 해요."
+          },
+          {
+            "kind": "p",
+            "text": "SALGRADE에는 등급별 급여 구간(LOSAL ~ HISAL)만 있고, EMP의 급여와 똑같은 값은 없어요. 그래서 `=`로는 붙일 수 없고, BETWEEN으로 붙여요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT E.ENAME, E.SAL, S.GRADE\nFROM EMP E, SALGRADE S\nWHERE E.SAL BETWEEN S.LOSAL AND S.HISAL\nORDER BY E.EMPNO;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "ENAME",
+              "SAL",
+              "GRADE"
+            ],
+            "rows": [
+              [
+                "김대표",
+                "9000",
+                "4"
+              ],
+              [
+                "이개발",
+                "6000",
+                "4"
+              ],
+              [
+                "박영업",
+                "6000",
+                "4"
+              ],
+              [
+                "최코드",
+                "4000",
+                "3"
+              ],
+              [
+                "정코드",
+                "4000",
+                "3"
+              ],
+              [
+                "한세일",
+                "3500",
+                "2"
+              ],
+              [
+                "윤세일",
+                "3000",
+                "2"
+              ],
+              [
+                "강신입",
+                "3000",
+                "2"
+              ],
+              [
+                "조미정",
+                "2800",
+                "1"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "김대표의 급여 9000은 6000 ~ 9999 구간에 들어가서 GRADE 4가 돼요.",
+              "윤세일의 급여 3000은 2등급의 최저 급여(LOSAL)와 같아요. BETWEEN은 양 끝 값을 포함하기 때문에 3000 ~ 3999 구간인 GRADE 2가 돼요.",
+              "조미정은 부서가 없지만 급여 2800이 있어서 GRADE 1로 붙어요. 이번 조인은 DEPTNO를 쓰지 않기 때문이에요.",
+              "서인턴은 급여가 NULL이라 `NULL BETWEEN 0 AND 2999`가 UNKNOWN이 돼요. 어느 등급과도 붙지 않고 빠져요.",
+              "그래서 이번에도 9행이에요. 하지만 1번 예제에서는 조미정이 빠졌고, 이번에는 서인턴이 빠졌어요. 빠지는 사람이 조인 조건에 따라 달라져요."
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "등급 구간이 서로 겹치지 않기 때문에, 사원 한 명은 등급 하나에만 붙어요. 그래서 NON-EQUI JOIN이라고 해서 행이 늘어나는 것은 아니에요. 행 수는 데이터에 따라 달라져요."
+          }
+        ]
       },
       {
-        id: "order",
-        title: "3. ON과 WHERE의 차이",
-        concept: "join_order",
-        blocks: [
-          { kind: "p", text: "OUTER JOIN에서 오른쪽 테이블 조건을 ON에 쓰면 '붙일 때의 조건'이 되고, WHERE에 쓰면 '붙인 뒤에 거르는 조건'이 돼요." },
-          { kind: "callout", text: "자주 혼동 · LEFT JOIN 뒤 WHERE E.JOB = 'DEV'를 쓰면 짝이 없어 NULL이 된 행도 걸러져서, 결과가 INNER JOIN과 같아져요." },
-        ],
+        "id": "cartesian",
+        "title": "3. 조인 조건 N−1개와 카테시안 곱",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "테이블 2개는 조인 조건 1개로 이어져요. 테이블이 3개면 사슬처럼 이어야 하니 조건이 2개 필요해요. 이렇게 테이블이 N개면 조인 조건은 **최소 N−1개**가 필요해요."
+          },
+          {
+            "kind": "p",
+            "text": "조건이 하나라도 빠지면, 그 테이블의 행은 다른 테이블의 모든 행과 하나씩 짝지어져요. 이것을 카테시안 곱(Cartesian Product)이라고 해요. 카테시안 곱의 행 수는 각 테이블 행 수를 곱한 값이에요."
+          },
+          {
+            "kind": "p",
+            "text": "먼저 테이블 3개를 조건 2개로 바르게 조인해 볼게요."
+          },
+          {
+            "kind": "code",
+            "text": "-- 테이블 3개, 조건 2개 (N-1 = 2)\nSELECT E.ENAME, D.DNAME, S.GRADE\nFROM EMP E, DEPT D, SALGRADE S\nWHERE E.DEPTNO = D.DEPTNO\n  AND E.SAL BETWEEN S.LOSAL AND S.HISAL\nORDER BY E.EMPNO;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "ENAME",
+              "DNAME",
+              "GRADE"
+            ],
+            "rows": [
+              [
+                "김대표",
+                "개발",
+                "4"
+              ],
+              [
+                "이개발",
+                "개발",
+                "4"
+              ],
+              [
+                "박영업",
+                "영업",
+                "4"
+              ],
+              [
+                "최코드",
+                "개발",
+                "3"
+              ],
+              [
+                "정코드",
+                "개발",
+                "3"
+              ],
+              [
+                "한세일",
+                "영업",
+                "2"
+              ],
+              [
+                "윤세일",
+                "영업",
+                "2"
+              ],
+              [
+                "강신입",
+                "개발",
+                "2"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "첫 번째 조건 `E.DEPTNO = D.DEPTNO`에서 부서가 NULL인 조미정이 빠져요.",
+              "두 번째 조건 `E.SAL BETWEEN …`에서 급여가 NULL인 서인턴이 빠져요.",
+              "두 사람이 빠져서 8행이에요."
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "이번에는 조건을 빼 볼게요. 먼저 EMP와 DEPT를 조건 없이 조인해요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT COUNT(*) AS CNT\nFROM EMP E, DEPT D;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "CNT"
+            ],
+            "rows": [
+              [
+                "30"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "다음은 테이블 3개에 조건을 1개만 쓴 경우예요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT COUNT(*) AS CNT\nFROM EMP E, DEPT D, SALGRADE S\nWHERE E.DEPTNO = D.DEPTNO;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "CNT"
+            ],
+            "rows": [
+              [
+                "36"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "첫 번째 쿼리는 조인 조건이 없어요. EMP 10행 각각이 DEPT 3행 모두와 짝지어져서 10 × 3 = 30행이에요.",
+              "두 번째 쿼리는 EMP와 DEPT 사이에만 조건이 있어요. 이 둘은 1번 예제처럼 9행으로 이어져요.",
+              "그런데 SALGRADE에는 아무 조건이 없어요. 그래서 9행 각각이 SALGRADE 4행 모두와 짝지어져 9 × 4 = 36행이 돼요."
+            ]
+          }
+        ]
       },
+      {
+        "id": "oracle",
+        "title": "4. Oracle (+) OUTER JOIN",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "1번 EQUI JOIN에서는 짝이 없는 행(30번 기획, 조미정)이 사라졌어요. 짝이 없어도 한쪽 테이블의 행을 모두 남기는 조인을 OUTER JOIN(외부 조인)이라고 해요. 짝이 없는 자리는 NULL로 채워요."
+          },
+          {
+            "kind": "p",
+            "text": "Oracle 전통 문법에서는 **값이 없어서 NULL로 채워질 쪽** 컬럼에 `(+)`를 붙여요. \"모자란 쪽에 (+)를 붙인다\"고 기억하면 돼요. `(+)`가 **붙지 않은 쪽**의 행이 모두 남아요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT D.DEPTNO, D.DNAME, E.ENAME\nFROM DEPT D, EMP E\nWHERE D.DEPTNO = E.DEPTNO(+)\nORDER BY D.DEPTNO, E.EMPNO;"
+          },
+          {
+            "kind": "p",
+            "text": "`E.DEPTNO(+)`는 \"EMP 쪽 값이 모자랄 수 있다\"는 뜻이에요. 그래서 반대쪽인 DEPT의 행이 모두 남아요. 표준 문법으로는 `DEPT LEFT OUTER JOIN EMP`와 같아요(7번에서 배워요)."
+          },
+          {
+            "kind": "table",
+            "head": [
+              "DEPTNO",
+              "DNAME",
+              "ENAME"
+            ],
+            "rows": [
+              [
+                "10",
+                "개발",
+                "김대표"
+              ],
+              [
+                "10",
+                "개발",
+                "이개발"
+              ],
+              [
+                "10",
+                "개발",
+                "최코드"
+              ],
+              [
+                "10",
+                "개발",
+                "정코드"
+              ],
+              [
+                "10",
+                "개발",
+                "강신입"
+              ],
+              [
+                "10",
+                "개발",
+                "서인턴"
+              ],
+              [
+                "20",
+                "영업",
+                "박영업"
+              ],
+              [
+                "20",
+                "영업",
+                "한세일"
+              ],
+              [
+                "20",
+                "영업",
+                "윤세일"
+              ],
+              [
+                "30",
+                "기획",
+                "NULL"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "10번, 20번 부서는 EQUI JOIN과 똑같이 사원 6명, 3명과 붙어요. 여기까지 9행이에요.",
+              "30번 기획은 짝이 되는 사원이 없어요. 하지만 `(+)`가 EMP 쪽에 있으니 DEPT 행은 남고, ENAME 자리는 NULL로 채워져요. 그래서 10행이에요.",
+              "조미정은 여전히 나오지 않아요. 이번에 모두 남는 쪽은 DEPT이고, 조미정은 EMP 쪽 행이기 때문이에요."
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "방향을 바꿔서 `(+)`를 DEPT 쪽에 붙여 볼게요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT E.ENAME, E.DEPTNO, D.DNAME\nFROM EMP E, DEPT D\nWHERE E.DEPTNO = D.DEPTNO(+)\nORDER BY E.EMPNO;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "ENAME",
+              "DEPTNO",
+              "DNAME"
+            ],
+            "rows": [
+              [
+                "김대표",
+                "10",
+                "개발"
+              ],
+              [
+                "이개발",
+                "10",
+                "개발"
+              ],
+              [
+                "박영업",
+                "20",
+                "영업"
+              ],
+              [
+                "최코드",
+                "10",
+                "개발"
+              ],
+              [
+                "정코드",
+                "10",
+                "개발"
+              ],
+              [
+                "한세일",
+                "20",
+                "영업"
+              ],
+              [
+                "윤세일",
+                "20",
+                "영업"
+              ],
+              [
+                "강신입",
+                "10",
+                "개발"
+              ],
+              [
+                "조미정",
+                "NULL",
+                "NULL"
+              ],
+              [
+                "서인턴",
+                "10",
+                "개발"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "이번에는 EMP의 행이 모두 남아요. 조미정이 DNAME NULL로 나오고, 사원이 없는 기획은 빠져요. 행 수는 똑같이 10행이지만 들어 있는 행이 달라요."
+          },
+          {
+            "kind": "h3",
+            "text": "추가 조건에도 `(+)`를 붙여야 해요"
+          },
+          {
+            "kind": "p",
+            "text": "조인 조건 말고 다른 조건을 더 쓸 때도, NULL로 채워질 쪽 컬럼에는 `(+)`를 붙여야 OUTER JOIN이 유지돼요. \"급여 6000 이상인 사원만 부서에 붙이되, 부서는 모두 남기기\"를 써 볼게요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT D.DNAME, E.ENAME, E.SAL\nFROM DEPT D, EMP E\nWHERE D.DEPTNO = E.DEPTNO(+)\n  AND E.SAL(+) >= 6000\nORDER BY D.DEPTNO, E.EMPNO;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "DNAME",
+              "ENAME",
+              "SAL"
+            ],
+            "rows": [
+              [
+                "개발",
+                "김대표",
+                "9000"
+              ],
+              [
+                "개발",
+                "이개발",
+                "6000"
+              ],
+              [
+                "영업",
+                "박영업",
+                "6000"
+              ],
+              [
+                "기획",
+                "NULL",
+                "NULL"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "급여가 6000 이상인 사원은 김대표, 이개발, 박영업 세 명이에요. 이 세 명만 부서에 붙어요.",
+              "기획은 붙을 사원이 없지만, DEPT 행은 모두 남기 때문에 NULL로 채워져 남아요. 그래서 4행이에요.",
+              "`E.SAL(+)`에서 `(+)`를 빼고 `E.SAL >= 6000`이라고만 쓰면 결과가 달라져요. 기획 행은 SAL이 NULL이라 `NULL >= 6000`이 UNKNOWN이 되고, 이 조건에서 지워져요. 결과는 김대표, 이개발, 박영업 3행만 남아요. 이 차이는 8번에서 표준 문법으로 다시 볼게요."
+            ]
+          },
+          {
+            "kind": "h3",
+            "text": "`(+)` 문법의 제약"
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "`(+)`는 한쪽에만 붙일 수 있어요. 양쪽 행을 모두 남기는 FULL OUTER JOIN은 이 문법으로 쓸 수 없어요. 표준 문법의 `FULL OUTER JOIN`을 써요.",
+              "`(+)`가 붙은 조건은 OR나 IN과 함께 쓸 수 없어요."
+            ]
+          },
+          {
+            "kind": "callout",
+            "text": "SQL Server에는 `(+)`가 없어요. 예전에 쓰던 `*=`, `=*` 문법도 지금은 지원하지 않으니, 표준 문법의 OUTER JOIN을 써요."
+          }
+        ]
+      },
+      {
+        "id": "inner",
+        "title": "5. INNER JOIN, CROSS JOIN과 ON 절",
+        "concept": "inner_join",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "5번부터는 ANSI/ISO 표준 조인 문법이에요. 표준 문법은 조인 조건을 WHERE가 아니라 FROM 절의 `ON`에 써요. 조인 조건(ON)과 결과를 거르는 조건(WHERE)이 나뉘어서 읽기 쉬워요."
+          },
+          {
+            "kind": "p",
+            "text": "INNER JOIN은 양쪽 테이블 모두에 짝이 있는 행만 붙이는 조인이에요. 1번 EQUI JOIN과 결과가 같아요. `INNER`는 생략할 수 있어서 `JOIN`만 쓰면 INNER JOIN이에요. ON에는 두 컬럼의 이름이 달라도 되고, `=`가 아닌 조건을 써도 돼요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT E.ENAME, D.DNAME\nFROM EMP E INNER JOIN DEPT D\n  ON E.DEPTNO = D.DEPTNO\nWHERE D.LOC = '부산'\nORDER BY E.EMPNO;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "ENAME",
+              "DNAME"
+            ],
+            "rows": [
+              [
+                "박영업",
+                "영업"
+              ],
+              [
+                "한세일",
+                "영업"
+              ],
+              [
+                "윤세일",
+                "영업"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "ON으로 EMP와 DEPT를 붙이면 9행이에요. 조미정은 DEPTNO가 NULL이라 빠지고, 기획은 짝이 없어서 빠져요.",
+              "WHERE의 `D.LOC = '부산'`이 그중 부산에 있는 영업 부서 3행만 남겨요.",
+              "INNER JOIN에서는 `D.LOC = '부산'`을 WHERE 대신 ON에 `AND`로 붙여도 결과가 같아요. 결과가 달라지는 것은 OUTER JOIN뿐이에요(8번에서 배워요)."
+            ]
+          },
+          {
+            "kind": "h3",
+            "text": "CROSS JOIN"
+          },
+          {
+            "kind": "p",
+            "text": "CROSS JOIN은 조건 없이 모든 조합을 만드는 조인이에요. 3번에서 본 카테시안 곱을 일부러 만드는 문법이에요. CROSS JOIN에는 ON을 쓰지 않아요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT COUNT(*) AS CNT\nFROM EMP CROSS JOIN DEPT;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "CNT"
+            ],
+            "rows": [
+              [
+                "30"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "EMP 10행과 DEPT 3행의 모든 조합이라 10 × 3 = 30행이에요. 3번에서 `FROM EMP E, DEPT D`에 조건을 쓰지 않았을 때와 같은 결과예요."
+          }
+        ]
+      },
+      {
+        "id": "natural",
+        "title": "6. NATURAL JOIN과 USING 절",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "NATURAL JOIN은 두 테이블에서 **이름이 같은 모든 컬럼**으로 자동으로 EQUI JOIN을 해요. EMP와 DEPT에서 이름이 같은 컬럼은 DEPTNO 하나라서, `E.DEPTNO = D.DEPTNO`로 조인한 것과 같아요."
+          },
+          {
+            "kind": "p",
+            "text": "USING 절은 이름이 같은 컬럼 가운데 **조인에 쓸 컬럼을 직접 골라** 적는 방법이에요. `USING (DEPTNO)`처럼 괄호 안에 컬럼 이름을 써요."
+          },
+          {
+            "kind": "p",
+            "text": "먼저 USING으로 박영업(사원 번호 1003)의 부서를 찾아볼게요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT DEPTNO, DNAME, ENAME\nFROM DEPT D JOIN EMP E\n  USING (DEPTNO)\nWHERE EMPNO = 1003;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "DEPTNO",
+              "DNAME",
+              "ENAME"
+            ],
+            "rows": [
+              [
+                "20",
+                "영업",
+                "박영업"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "`SELECT DEPTNO`에 `D.`나 `E.`를 붙이지 않은 것을 눈여겨봐 주세요. 이유는 아래에서 설명할게요."
+          },
+          {
+            "kind": "h3",
+            "text": "SELECT * 의 컬럼 수가 달라요"
+          },
+          {
+            "kind": "p",
+            "text": "같은 조인을 `SELECT *`로 실행하면, USING(또는 NATURAL)과 ON의 결과 컬럼 수가 달라요. 시험에 자주 나오는 부분이에요."
+          },
+          {
+            "kind": "code",
+            "text": "-- (1) USING\nSELECT *\nFROM DEPT D JOIN EMP E\n  USING (DEPTNO)\nWHERE EMPNO = 1003;\n\n-- (2) ON\nSELECT *\nFROM DEPT D JOIN EMP E\n  ON D.DEPTNO = E.DEPTNO\nWHERE EMPNO = 1003;"
+          },
+          {
+            "kind": "p",
+            "text": "결과는 둘 다 박영업 한 행이지만, 나오는 컬럼이 이렇게 달라요."
+          },
+          {
+            "kind": "table",
+            "head": [
+              "쿼리",
+              "컬럼 수",
+              "나오는 컬럼 (순서대로)"
+            ],
+            "rows": [
+              [
+                "(1) USING",
+                "10개",
+                "**DEPTNO**, DNAME, LOC, EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM"
+              ],
+              [
+                "(2) ON",
+                "11개",
+                "DEPTNO, DNAME, LOC, EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "`(1)`을 `DEPT NATURAL JOIN EMP`로 바꿔 실행해도 같은 10개 컬럼이 나와요."
+          },
+          {
+            "kind": "p",
+            "text": "하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "USING과 NATURAL은 DEPTNO를 \"하나의 공통 컬럼\"으로 합쳐서 맨 앞에 한 번만 보여 줘요. DEPT 3개 + EMP 8개 − 공통 1개 = 10개 컬럼이에요.",
+              "ON은 두 테이블의 DEPTNO를 각각 다른 컬럼으로 둬요. 그래서 3 + 8 = 11개 컬럼이고, DEPTNO가 두 번 나와요.",
+              "USING과 NATURAL에서는 공통 컬럼이 하나로 합쳐졌으니, 어느 테이블의 DEPTNO인지 고를 수 없어요. 그래서 공통 컬럼에 `D.DEPTNO`처럼 접두사(테이블 별칭)를 붙이면 오류가 나요(Oracle ORA-25154, ORA-25155). `DEPTNO`라고만 써야 해요."
+            ]
+          },
+          {
+            "kind": "h3",
+            "text": "그 밖의 규칙"
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "NATURAL JOIN에는 ON이나 USING을 함께 쓰지 않아요.",
+              "NATURAL JOIN은 이름이 같은 컬럼을 모두 조인 조건으로 써요. 이름만 같고 뜻이 다른 컬럼이 있으면 그 컬럼까지 조건이 되어 원하지 않은 결과가 나올 수 있어요.",
+              "USING에 쓰는 컬럼은 양쪽 테이블에 같은 이름으로 있어야 해요. 이름이 다르면 ON을 써요."
+            ]
+          },
+          {
+            "kind": "callout",
+            "text": "SQL Server는 NATURAL JOIN과 USING을 지원하지 않아요. ON만 써요."
+          }
+        ]
+      },
+      {
+        "id": "outer",
+        "title": "7. LEFT / RIGHT / FULL OUTER JOIN",
+        "concept": "outer_join",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "표준 문법의 OUTER JOIN은 어느 쪽 행을 모두 남길지를 키워드로 정해요."
+          },
+          {
+            "kind": "table",
+            "head": [
+              "문법",
+              "모두 남는 쪽"
+            ],
+            "rows": [
+              [
+                "`A LEFT OUTER JOIN B`",
+                "왼쪽 A의 행. 짝이 없으면 B 컬럼을 NULL로 채워요"
+              ],
+              [
+                "`A RIGHT OUTER JOIN B`",
+                "오른쪽 B의 행. 짝이 없으면 A 컬럼을 NULL로 채워요"
+              ],
+              [
+                "`A FULL OUTER JOIN B`",
+                "양쪽 행 모두"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "`OUTER`는 생략할 수 있어서 `LEFT JOIN`이라고만 써도 돼요. 이 데이터에서는 사원이 없는 **30번 기획**과 부서가 없는 **조미정**이 행 수 차이를 만들어요. FULL OUTER JOIN으로 두 경우를 한 번에 볼게요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT E.ENAME,\n       E.DEPTNO AS E_DEPTNO,\n       D.DEPTNO AS D_DEPTNO,\n       D.DNAME\nFROM EMP E FULL OUTER JOIN DEPT D\n  ON E.DEPTNO = D.DEPTNO\nORDER BY E.EMPNO, D.DEPTNO;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "ENAME",
+              "E_DEPTNO",
+              "D_DEPTNO",
+              "DNAME"
+            ],
+            "rows": [
+              [
+                "김대표",
+                "10",
+                "10",
+                "개발"
+              ],
+              [
+                "이개발",
+                "10",
+                "10",
+                "개발"
+              ],
+              [
+                "박영업",
+                "20",
+                "20",
+                "영업"
+              ],
+              [
+                "최코드",
+                "10",
+                "10",
+                "개발"
+              ],
+              [
+                "정코드",
+                "10",
+                "10",
+                "개발"
+              ],
+              [
+                "한세일",
+                "20",
+                "20",
+                "영업"
+              ],
+              [
+                "윤세일",
+                "20",
+                "20",
+                "영업"
+              ],
+              [
+                "강신입",
+                "10",
+                "10",
+                "개발"
+              ],
+              [
+                "조미정",
+                "NULL",
+                "NULL",
+                "NULL"
+              ],
+              [
+                "서인턴",
+                "10",
+                "10",
+                "개발"
+              ],
+              [
+                "NULL",
+                "NULL",
+                "30",
+                "기획"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "조미정 행은 DEPT 쪽 컬럼(D_DEPTNO, DNAME)이 NULL이고, 기획 행은 EMP 쪽 컬럼(ENAME, E_DEPTNO)이 NULL이에요."
+          },
+          {
+            "kind": "p",
+            "text": "같은 `EMP E ○○ JOIN DEPT D ON E.DEPTNO = D.DEPTNO`에서 조인 종류만 바꾸면 행 수가 이렇게 달라요. CROSS JOIN은 ON 없이 실행한 값이에요."
+          },
+          {
+            "kind": "table",
+            "head": [
+              "조인 종류",
+              "행 수"
+            ],
+            "rows": [
+              [
+                "INNER",
+                "9"
+              ],
+              [
+                "LEFT",
+                "10"
+              ],
+              [
+                "RIGHT",
+                "10"
+              ],
+              [
+                "FULL",
+                "11"
+              ],
+              [
+                "CROSS",
+                "30"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "INNER는 9행이에요. 짝이 있는 사원 9명이에요.",
+              "LEFT(EMP 기준)는 10행이에요. 9행에 부서가 없는 조미정이 DNAME NULL로 더해져요.",
+              "RIGHT(DEPT 기준)는 10행이에요. 9행에 사원이 없는 기획이 ENAME NULL로 더해져요. 조미정은 빠져요.",
+              "FULL은 11행이에요. 짝이 있는 9행 + 왼쪽에만 있는 조미정 1행 + 오른쪽에만 있는 기획 1행이에요. LEFT 10행과 RIGHT 10행을 더한 20행이 아니에요. 두 결과에 겹치는 9행은 한 번만 세요."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "order",
+        "title": "8. OUTER JOIN에서 ON과 WHERE",
+        "concept": "join_order",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "처리 순서로 이해하면 쉬워요. **ON은 조인하면서 \"누구와 붙을지\"를 정하고, WHERE는 조인이 끝난 결과에서 \"어떤 행을 남길지\"를 정해요.**"
+          },
+          {
+            "kind": "p",
+            "text": "OUTER JOIN은 ON에서 짝을 찾지 못한 기준 행도 NULL로 채워서 살려 둬요. 그런데 WHERE에서 그 NULL 컬럼에 조건을 걸면 결과가 UNKNOWN이 되어 다시 지워져요. 여기서 기준 테이블은 모두 남는 쪽(LEFT JOIN의 왼쪽)이고, 안쪽 테이블은 NULL로 채워질 수 있는 쪽이에요."
+          },
+          {
+            "kind": "p",
+            "text": "같은 조건 `E.SAL >= 6000`을 ON에 둘 때와 WHERE에 둘 때를 비교해 볼게요."
+          },
+          {
+            "kind": "code",
+            "text": "-- (1) 안쪽 테이블(EMP) 조건을 ON에\nSELECT D.DNAME, E.ENAME, E.SAL\nFROM DEPT D LEFT OUTER JOIN EMP E\n  ON D.DEPTNO = E.DEPTNO\n AND E.SAL >= 6000\nORDER BY D.DEPTNO, E.EMPNO;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "DNAME",
+              "ENAME",
+              "SAL"
+            ],
+            "rows": [
+              [
+                "개발",
+                "김대표",
+                "9000"
+              ],
+              [
+                "개발",
+                "이개발",
+                "6000"
+              ],
+              [
+                "영업",
+                "박영업",
+                "6000"
+              ],
+              [
+                "기획",
+                "NULL",
+                "NULL"
+              ]
+            ]
+          },
+          {
+            "kind": "code",
+            "text": "-- (2) 같은 조건을 WHERE에\nSELECT D.DNAME, E.ENAME, E.SAL\nFROM DEPT D LEFT OUTER JOIN EMP E\n  ON D.DEPTNO = E.DEPTNO\nWHERE E.SAL >= 6000\nORDER BY D.DEPTNO, E.EMPNO;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "DNAME",
+              "ENAME",
+              "SAL"
+            ],
+            "rows": [
+              [
+                "개발",
+                "김대표",
+                "9000"
+              ],
+              [
+                "개발",
+                "이개발",
+                "6000"
+              ],
+              [
+                "영업",
+                "박영업",
+                "6000"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "(1)은 \"급여 6000 이상인 사원만 붙여라\"라는 뜻이에요. 김대표, 이개발, 박영업이 붙고, 기획은 붙을 사원이 없지만 LEFT JOIN의 기준 행이라 NULL로 남아요. 그래서 4행이에요. 4번의 `E.SAL(+) >= 6000` 예제와 같은 결과예요.",
+              "(2)는 먼저 LEFT JOIN으로 10행(기획 NULL 행 포함)을 만들어요. 그다음 WHERE가 급여 6000 미만인 사원과, `NULL >= 6000`이 UNKNOWN인 기획 행을 지워요. 그래서 3행이에요.",
+              "(2)의 결과는 INNER JOIN 결과와 같아요. 안쪽 테이블 조건을 WHERE에 두면 OUTER JOIN을 쓴 의미가 없어져요."
+            ]
+          },
+          {
+            "kind": "h3",
+            "text": "기준 테이블의 조건을 ON에 두면"
+          },
+          {
+            "kind": "p",
+            "text": "반대로 기준 테이블(DEPT) 쪽 조건을 ON에 두면, 기준 행은 걸러지지 않아요."
+          },
+          {
+            "kind": "code",
+            "text": "SELECT D.DNAME, D.LOC, E.ENAME\nFROM DEPT D LEFT OUTER JOIN EMP E\n  ON D.DEPTNO = E.DEPTNO\n AND D.LOC = '부산'\nORDER BY D.DEPTNO, E.EMPNO;"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "DNAME",
+              "LOC",
+              "ENAME"
+            ],
+            "rows": [
+              [
+                "개발",
+                "서울",
+                "NULL"
+              ],
+              [
+                "영업",
+                "부산",
+                "박영업"
+              ],
+              [
+                "영업",
+                "부산",
+                "한세일"
+              ],
+              [
+                "영업",
+                "부산",
+                "윤세일"
+              ],
+              [
+                "기획",
+                "서울",
+                "NULL"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "하나씩 따라가 볼게요."
+          },
+          {
+            "kind": "ol",
+            "items": [
+              "ON의 `D.LOC = '부산'`은 \"부산에 있는 부서에만 사원을 붙여라\"라는 뜻이 돼요.",
+              "영업(부산)에는 사원 3명이 붙어요.",
+              "개발(서울)은 조건에 맞지 않아 사원이 붙지 않아요. 하지만 LEFT JOIN의 기준 행이라 사라지지 않고 ENAME NULL로 남아요. 기획(서울)도 마찬가지예요.",
+              "그래서 5행이에요. 같은 `D.LOC = '부산'`을 WHERE에 두면 영업 3행만 남아요."
+            ]
+          },
+          {
+            "kind": "h3",
+            "text": "정리"
+          },
+          {
+            "kind": "table",
+            "head": [
+              "하고 싶은 것",
+              "조건을 둘 곳"
+            ],
+            "rows": [
+              [
+                "기준 행은 모두 남기고, 붙일 상대만 고르기",
+                "ON"
+              ],
+              [
+                "결과 행 자체를 줄이기",
+                "WHERE"
+              ],
+              [
+                "짝이 없는 행만 찾기",
+                "WHERE에 `IS NULL`"
+              ]
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "짝이 없는 행만 찾고 싶다면 안쪽 테이블의 컬럼에 `IS NULL` 조건을 걸어요. 예를 들어 `DEPT D LEFT OUTER JOIN EMP E ON D.DEPTNO = E.DEPTNO`에 `WHERE E.EMPNO IS NULL`을 붙이면, 사원이 없는 30번 기획 1행만 나와요."
+          }
+        ]
+      },
+      {
+        "id": "myths",
+        "title": "자주 하는 오해",
+        "blocks": [
+          {
+            "kind": "table",
+            "head": [
+              "오해",
+              "실제"
+            ],
+            "rows": [
+              [
+                "조인 키가 둘 다 NULL이면 같은 값이니 붙는다",
+                "`NULL = NULL`은 UNKNOWN이라 EQUI JOIN에서 빠져요. 조미정은 EMP와 DEPT의 EQUI JOIN 결과 9행에 들어가지 않아요"
+              ],
+              [
+                "NON-EQUI JOIN은 결과가 항상 EQUI JOIN보다 많다",
+                "행 수는 데이터에 달려 있어요. 급여 등급처럼 구간이 겹치지 않으면 사원 한 명에 등급 하나씩만 붙어요. 이 데이터에서는 둘 다 9행이에요"
+              ],
+              [
+                "테이블 3개를 조인하면 조건도 3개가 필요하다",
+                "최소 N−1 = 2개예요. 조건이 모자라면 카테시안 곱이 생겨요. EMP·DEPT·SALGRADE에 조건이 1개뿐이면 9 × 4 = 36행이에요"
+              ],
+              [
+                "`(+)`를 붙인 쪽 테이블의 행이 모두 남는다",
+                "반대예요. `(+)`는 NULL로 채워질(모자란) 쪽에 붙고, **붙지 않은 쪽** 행이 모두 남아요"
+              ],
+              [
+                "OUTER JOIN의 추가 조건은 `(+)` 없이 써도 OUTER JOIN이 유지된다",
+                "안쪽 테이블 조건에 `(+)`가 없으면 NULL 행이 지워져 INNER JOIN처럼 돼요. 4행이 아니라 3행이 나와요"
+              ],
+              [
+                "USING 컬럼에도 `E.DEPTNO`처럼 접두사를 붙이는 게 안전하다",
+                "NATURAL JOIN과 USING의 공통 컬럼에 접두사를 붙이면 오류예요"
+              ],
+              [
+                "NATURAL JOIN과 USING의 SELECT * 컬럼 수는 ON과 같다",
+                "공통 컬럼이 하나로 합쳐져서 그만큼 적어요. DEPT와 EMP는 USING 10개, ON 11개예요"
+              ],
+              [
+                "FULL OUTER JOIN 행 수 = LEFT 행 수 + RIGHT 행 수",
+                "겹치는 부분은 한 번만 세요. 10 + 10 = 20이 아니라 9 + 1 + 1 = 11행이에요"
+              ],
+              [
+                "OUTER JOIN에서도 조건을 ON에 두든 WHERE에 두든 같다",
+                "같은 것은 INNER JOIN뿐이에요. 안쪽 테이블 조건을 WHERE에 두면 4행이 3행으로 줄어 INNER JOIN처럼 돼요"
+              ],
+              [
+                "LEFT OUTER JOIN에서 기준 테이블 조건을 ON에 두면 기준 행이 걸러진다",
+                "기준 행은 그대로 남고 상대만 붙지 않아요. `ON … AND D.LOC = '부산'`이어도 개발과 기획은 NULL로 남아 5행이에요"
+              ]
+            ]
+          }
+        ]
+      }
     ],
   },
 ];

@@ -1,12 +1,16 @@
-import { BookOpen, Check, ChevronRight } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { CONCEPTS, getMaterial } from "../data/materials";
-import { questionsFor, type Question } from "../data/questions";
+import { getQuestion, questionsFor, type Question } from "../data/questions";
 import { Rich } from "../components/Rich";
+import { Mascot } from "../components/Brand";
 import { todayKey, useStore, type Attempt, type ChatMsg, type Confidence } from "../store";
 import { HOME } from "../App";
 import cookieUrl from "../assets/mascot-cookie.webp";
+import cookieWantUrl from "../assets/mascot-cookie-want.webp";
+import cookieCloudUrl from "../assets/cookie-cloud.webp";
+import cookieWantFrownUrl from "../assets/mascot-cookie-want-frown.webp";
 
 /**
  * 꺼내 보기 — right after login, pull 3 things studied before back out of memory (retrieval practice).
@@ -14,7 +18,6 @@ import cookieUrl from "../assets/mascot-cookie.webp";
  * dwells on what came out different from what the learner thought they knew.
  */
 
-const DAY = 86_400_000;
 
 type Item = {
   concept: string;
@@ -44,6 +47,8 @@ type Answer = {
   right: string;
   /** why it is the answer, shown under the comparison */
   why?: string;
+  /** option index picked (choice questions), to mark 내 답 among the options */
+  picked?: number;
 };
 
 /** Answer + explanation for a question, kept apart so the result can show them separately. */
@@ -52,14 +57,6 @@ function answerOf(q: Question): Pick<Answer, "right" | "why"> {
   // explain questions: the first key point is the answer; the reasoning lives in 해설
   if (q.talk?.length) return { right: q.talk[0].label, why: q.explanation };
   return { right: q.explanation };
-}
-
-function agoLabel(at?: number) {
-  if (!at) return "최근 읽음";
-  const d = Math.floor((Date.now() - at) / DAY);
-  if (d <= 0) return "오늘";
-  if (d === 1) return "어제";
-  return `${d}일 전`;
 }
 
 const isChoice = (q: Question) => q.type === "객관식" || q.type === "OX";
@@ -143,6 +140,8 @@ export function Recall() {
   const [step, setStep] = useState<"intro" | "quiz" | "done">("intro");
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
+  // after the last answer the cookie travels to 플러키 at the end of the bar, then the result opens
+  const [handoff, setHandoff] = useState(false);
 
   // once a day: done or put off today → straight to studying (?again=1 opens it anyway, handy for testing)
   const [params] = useSearchParams();
@@ -159,25 +158,30 @@ export function Recall() {
     setAnswers(next);
     if (i + 1 < items.length) setI(i + 1);
     else {
-      setStep("done");
       dispatch({ type: "recallDay" });
+      const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      setHandoff(true);
+      window.setTimeout(() => setStep("done"), calm ? 0 : 1300);
     }
   };
 
   return (
     <main className="recall">
       <section className="recall-frame">
-        {/* the result page has no top bar: the cookie reward opens it */}
-        {step !== "done" && (
-          <div className="recall-bar">
-            <span className="recall-bar-title">꺼내 보기</span>
-            {/* 나중에 할게요 now lives under the start button, so the intro keeps this side empty */}
-            {step === "quiz" && <span className="recall-bar-count">{i + 1} / {items.length}</span>}
-          </div>
-        )}
+        {/* no top bar: the intro opens with 플러키, the quiz with its progress steps (a cookie bubble rides along), the result with the cookie */}
         {step === "quiz" && (
-          <div className="recall-steps" role="progressbar" aria-label="꺼내 보기 진행" aria-valuemin={1} aria-valuemax={items.length} aria-valuenow={i + 1}>
-            {items.map((_, k) => <i key={k} className={k < i ? "on" : k === i ? "now" : ""} />)}
+          <div className="recall-steps-wrap">
+            <div className="recall-steps" role="progressbar" aria-label="꺼내 보기 진행" aria-valuemin={1} aria-valuemax={items.length} aria-valuenow={i + 1}>
+              {items.map((_, k) => <i key={k} className={k < i ? "on" : k === i ? "now" : ""} />)}
+            </div>
+            {/* the cookie rides in the intro's thought cloud under the bar: it starts 14px from the card's left edge and moves to the end of the filled part with each question */}
+            <span className="recall-cookie-runner" style={{ transform: `translateX(calc(${(handoff ? 1 : i / items.length) * 100}% + ${handoff ? -7 : i === 0 ? 13 : 0}px))` }} aria-hidden>
+              <span className={`recall-cookie-bubble ${handoff ? "given" : ""}`}><img src={cookieCloudUrl} alt="" width={44} height={39} draggable={false} /></span>
+            </span>
+            {/* hungry 플러키 waits at the end of the last step; it lights up when the cookie arrives */}
+            <span className={`recall-steps-pluck ${handoff ? "got" : ""}`} aria-hidden>
+              <Mascot size={30} mood={handoff ? "wow" : "think"} />
+            </span>
           </div>
         )}
         <div className="recall-body">
@@ -194,20 +198,27 @@ export function Recall() {
   );
 }
 
-function introSub(items: Item[]) {
-  const asked = items.filter((it) => it.asked).length;
-  const skipped = items.length - asked;
-  // leave out a part whose count is 0
-  const parts = [skipped > 0 && `질문 없이 넘어간 ${skipped}개`, asked > 0 && `물어본 ${asked}개`].filter(Boolean);
-  return `${parts.join(", ")}예요`;
-}
-
 function Intro({ items, onStart, onLater }: { items: Item[]; onStart: () => void; onLater: () => void }) {
   return (
     <div className="recall-col">
-      <h1 className="recall-title">지난번에 공부한 것 중 {items.length}개를 꺼내 볼게요</h1>
-      <p className="recall-sub">{introSub(items)}</p>
-      <div className="recall-list">
+      {/* the cookie story starts here: finish all of them and 플러키 gets a cookie (shown on the result) */}
+      {/* 플러키 wishing for a cookie (thought bubble) — the reward waiting at the end */}
+      {/* gentle bob and blinks; the hungry "o" mouth stays (no smile) */}
+      <span className="mascot recall-intro-art" aria-hidden>
+        <span className="recall-want-bob">
+          <img src={cookieWantUrl} alt="" width={136} height={110} draggable={false} />
+          {/* now and then it sulks — still no cookie: the lids slide halfway down and the "o" turns into a little frown */}
+          <img className="recall-want-frown" src={cookieWantFrownUrl} alt="" width={136} height={110} draggable={false} />
+          <i className="recall-want-droop l" />
+          <i className="recall-want-droop r" />
+          <i className="mascot-lid l" />
+          <i className="mascot-lid r" />
+        </span>
+      </span>
+      <h1 className="recall-title recall-intro-center">지난번에 공부한 것 중 {items.length}개를 꺼내 볼게요</h1>
+      <p className="recall-sub recall-intro-center">{items.length}개를 꺼내 보면 플러키에게 쿠키를 줄 수 있어요</p>
+      {/* an info list (one soft box, thin dividers), not tappable cards — only 시작하기 is an action */}
+      <div className="recall-list recall-list--info">
         {[...items].sort((a, b) => Number(a.asked) - Number(b.asked)).map((it) => (
           <div key={it.concept} className="recall-row">
             <span className={`chip ${it.asked ? "chip-green" : "chip-red"}`}>{it.asked ? "물어봄" : "넘어감"}</span>
@@ -231,7 +242,7 @@ const CONF: { v: Confidence; label: string }[] = [
 ];
 
 /** "고른 답, 얼마나 확실해요?" + 확실해요 / 애매해요 / 찍었어요 — the same row under every question. */
-function ConfRow({ q, off, value, onChange }: { q: string; off: boolean; value: Confidence | null; onChange: (c: Confidence) => void }) {
+export function ConfRow({ q, off, value, onChange }: { q: string; off: boolean; value: Confidence | null; onChange: (c: Confidence) => void }) {
   return (
     <div className={`recall-conf ${off ? "off" : ""}`}>
       <span className="recall-conf-q">{q}</span>
@@ -244,15 +255,9 @@ function ConfRow({ q, off, value, onChange }: { q: string; off: boolean; value: 
   );
 }
 
-/** "[책] 오늘 읽은 · 단원" — the same source badge on top of every question. */
+/** The section the question came from — the same source badge on top of every question. */
 function SourceBadge({ item }: { item: Item }) {
-  return (
-    <span className="chip recall-from">
-      <BookOpen size={13} aria-hidden />
-      <span className="recall-from-when">{item.at ? `${agoLabel(item.at)} 읽은` : "최근 읽은"}</span>
-      {item.sectionTitle}
-    </span>
-  );
+  return <span className="chip recall-from">{item.sectionTitle}</span>;
 }
 
 function ChoiceStep({ item, last, onDone }: { item: Item; last: boolean; onDone: (a: Answer, picked: number) => void }) {
@@ -275,6 +280,7 @@ function ChoiceStep({ item, last, onDone }: { item: Item; last: boolean; onDone:
         mine: q.options[picked].text,
         right: q.options[q.answer].text,
         why: q.explanation,
+        picked,
       },
       picked
     );
@@ -401,7 +407,6 @@ function status(a: Answer): { label: string; cls: string; solid: boolean } {
 function Result({ answers }: { answers: Answer[] }) {
   const nav = useNavigate();
   const shaky = useMemo(() => answers.filter((a) => !status(a).solid), [answers]);
-  const goto = (a: Answer) => `/learn/${a.item.materialId}?section=${a.item.sectionId}`;
   const differ = answers.filter((a) => !a.correct).length;
   const n = answers.length;
   const title =
@@ -416,7 +421,7 @@ function Result({ answers }: { answers: Answer[] }) {
         <p className="recall-reward-msg"><span aria-hidden>🍪</span>플러키에게 쿠키를 전달했어요!</p>
         <div className="recall-cookie" aria-hidden>
           <div className="recall-cookie-float">
-            <img src={cookieUrl} alt="" width={132} height={138} draggable={false} />
+            <img src={cookieUrl} alt="" width={139} height={138} draggable={false} />
           </div>
         </div>
       </div>
@@ -429,35 +434,30 @@ function Result({ answers }: { answers: Answer[] }) {
           const st = status(a);
           return (
             <div key={a.item.concept} className={`recall-res ${st.solid ? "solid" : ""}`}>
-              <div className="recall-res-head">
-                <b>{i + 1}. {CONCEPTS[a.item.concept].name}</b>
-                <span className={`chip ${st.cls}`}>{st.solid && <Check size={12} />}{st.label}</span>
-                {!st.solid && (
-                  <Link className="recall-goto" to={goto(a)}>
-                    공부하러 가기 <ChevronRight size={14} />
-                  </Link>
-                )}
+              {/* same layout as the quiz and 지난 문제: concept badge left, status badge right, then the numbered question */}
+              <div className="quiz-history-q-head">
+                <span className="chip recall-from">{CONCEPTS[a.item.concept].name}</span>
+                <span className={`chip ${st.cls}`}>{st.label}</span>
               </div>
+              <p className="quiz-history-stem">{i + 1}. {(getQuestion(a.qid) ?? a.item.question).stem}</p>
+              {(getQuestion(a.qid) ?? a.item.question).code && <pre className="q-code mono">{(getQuestion(a.qid) ?? a.item.question).code}</pre>}
               {/* every result shows the explanation; wrong ones also compare my answer with the right one */}
               {(
                 <>
-                  {a.correct ? (
-                    a.why ? (
-                      <div className="recall-why">
-                        <span>해설</span>
-                        <div className="recall-compare-text"><Rich text={a.why} /></div>
-                      </div>
-                    ) : null
-                  ) : (
+                  {/* right or wrong, every result compares 내 답 with 정답, then the 해설 */}
                   <>
                     {/* long answers (a sentence or a query) stack top-to-bottom so they get the full width */}
-                    <div className={`recall-compare ${Math.max(a.mine.length, a.right.length) > 30 ? "stack" : ""}`}>
-                      <div className="mine"><span>내 답</span><div className="recall-compare-text">{a.mine || "—"}</div></div>
-                      <div className="right">
-                        <span>정답</span>
-                        <div className="recall-compare-text"><Rich text={a.right} /></div>
+                    {a.picked !== undefined ? (
+                      <ResultOptions q={getQuestion(a.qid) ?? a.item.question} picked={a.picked} />
+                    ) : (
+                      <div className={`recall-compare ${Math.max(a.mine.length, a.right.length) > 30 ? "stack" : ""}`}>
+                        <div className="mine"><span>내 답</span><div className="recall-compare-text">{a.mine || "—"}</div></div>
+                        <div className="right">
+                          <span>정답</span>
+                          <div className="recall-compare-text"><Rich text={a.right} /></div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                     {a.why && (
                       <div className="recall-why">
                         <span>해설</span>
@@ -465,7 +465,6 @@ function Result({ answers }: { answers: Answer[] }) {
                       </div>
                     )}
                   </>
-                  )}
                 </>
               )}
             </div>
@@ -479,3 +478,25 @@ function Result({ answers }: { answers: Answer[] }) {
     </div>
   );
 }
+
+/** A graded choice question's options: 정답 green with ✓, 내 답 red with ✕ (and a "내 답" note), the rest dimmed. */
+function ResultOptions({ q, picked }: { q: Question; picked: number }) {
+  const letters = q.type === "OX" ? ["O", "X"] : ["A", "B", "C", "D"];
+  return (
+    <div className="opts">
+      {q.options.map((op, j) => {
+        const isRight = j === q.answer;
+        const isMine = j === picked;
+        return (
+          <div key={j} className={`opt ${isRight ? "right" : isMine ? "wrong" : "dim"} quiz-history-opt`}>
+            <span className="k">{isRight ? <Check size={12} /> : isMine ? <X size={12} /> : letters[j]}</span>
+            <span className={op.text.includes("SELECT") ? "mono" : ""} style={{ fontSize: op.text.includes("SELECT") ? 12.5 : undefined }}>{op.text}</span>
+            {(isMine || isRight) && <span className="quiz-history-mine">{isRight ? "정답" : "내 답"}</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+

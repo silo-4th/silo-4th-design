@@ -15,7 +15,7 @@ const CONF: { v: Confidence; label: string }[] = [
   { v: "guess", label: "찍었어요" },
 ];
 
-/** Same chips as 꺼내 보기: shown from the start, dim until there is an answer; picking one grades the answer right away (no separate submit). */
+/** Same chips as 꺼내 보기: shown from the start, dim until there is an answer. Picking one only selects it; 정답 확인 grades. */
 function ConfChips({ q, off, value, onChange }: { q: string; off: boolean; value: Confidence | null; onChange: (c: Confidence) => void }) {
   return (
     <div className={`recall-conf quiz-conf ${off ? "off" : ""}`}>
@@ -25,6 +25,15 @@ function ConfChips({ q, off, value, onChange }: { q: string; off: boolean; value
           {c.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+/** Inline 정답 확인 for cards shown without the quiz panel's bottom bar. */
+function CheckButton({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
+  return (
+    <div className="quiz-cta">
+      <button className="btn btn-block btn-dark" disabled={disabled} onClick={onClick}>정답 확인</button>
     </div>
   );
 }
@@ -119,7 +128,7 @@ function Hints({ q, n }: { q: Question; n: number }) {
       {q.hints.slice(0, Math.min(n, 1)).map((h, i) => (
         <div className="hint" key={i}>
           <Lightbulb size={15} style={{ flex: "none", marginTop: 1 }} />
-          <span><b>힌트</b> · {h}</span>
+          <span><b>힌트</b> {h}</span>
         </div>
       ))}
     </>
@@ -178,15 +187,19 @@ function WrittenCard({ q, source, reviewOf, hints, showExplain, className, foote
   const talk = q.type === "대화형";
 
   const empty = !text.trim();
-  // no submit button for any written question: choosing a confidence chip grades it (same as 객관식)
-  useEffect(() => {
-    onCta?.(null);
-  }, [onCta]);
   const typedRight = !talk && !!q.blank?.some((a) => norm(text).includes(norm(a)));
   const covered = talk ? (q.talk ?? []).map((p) => p.keywords.some((k) => norm(text).includes(norm(k)))) : [];
 
   // 빈칸: the typed word must match; 대화형: the explanation must touch at least half of the key points
   const gradeAs = () => (talk ? covered.filter(Boolean).length >= Math.ceil((q.talk?.length ?? 1) / 2) : typedRight);
+
+  // 정답 확인: on once there is an answer and a confidence; shown in the panel's bottom bar (or inline without one)
+  const canCheck = stage === "write" && !empty && conf !== null;
+  const check = () => { if (canCheck) finish(gradeAs(), conf!); };
+  useEffect(() => {
+    onCta?.(stage === "write" ? { label: "정답 확인", disabled: !canCheck, run: check } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onCta, stage, text, conf, hintN]);
 
   const finish = (correct: boolean, confidence: Confidence) => {
     dispatch({ type: "attempt", attempt: { qid: q.id, correct, confidence, hints: hintN, source, reviewOf }, picked: -1 });
@@ -248,7 +261,8 @@ function WrittenCard({ q, source, reviewOf, hints, showExplain, className, foote
         </div>
       )}
 
-      {stage === "write" && <ConfChips q={talk ? "쓴 설명, 얼마나 확실해요?" : "쓴 답, 얼마나 확실해요?"} off={empty} value={conf} onChange={(c) => { setConf(c); finish(gradeAs(), c); }} />}
+      {stage === "write" && <ConfChips q={talk ? "쓴 설명, 얼마나 확실해요?" : "쓴 답, 얼마나 확실해요?"} off={empty} value={conf} onChange={setConf} />}
+      {stage === "write" && !onCta && <CheckButton disabled={!canCheck} onClick={check} />}
 
       {talk && stage !== "write" && (
         <div className="talk-check">
@@ -293,10 +307,10 @@ function ChoiceCard({ q, source, reviewOf, hints, showExplain, className, footer
   const [conf, setConf] = useState<Confidence | null>(null);
   const [hintN, setHintN] = useState(0);
   const [result, setResult] = useState<QuizResult | null>(null);
+  const canCheck = stage === "pick" && picked !== null && conf !== null;
   useEffect(() => {
     if (!onCta) return;
-    // no submit button: choosing a confidence chip grades the answer
-    onCta(null);
+    onCta(stage === "pick" ? { label: "정답 확인", disabled: !canCheck, run: () => conf && submit(conf) } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onCta, stage, picked, conf, hintN]);
 
@@ -340,7 +354,8 @@ function ChoiceCard({ q, source, reviewOf, hints, showExplain, className, footer
         })}
       </div>
 
-      {stage === "pick" && <ConfChips q="고른 답, 얼마나 확실해요?" off={picked === null} value={conf} onChange={(c) => { setConf(c); submit(c); }} />}
+      {stage === "pick" && <ConfChips q="고른 답, 얼마나 확실해요?" off={picked === null} value={conf} onChange={setConf} />}
+      {stage === "pick" && !onCta && <CheckButton disabled={!canCheck} onClick={() => conf && submit(conf)} />}
 
       {stage === "done" && result && (
         <>
