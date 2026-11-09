@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import { App } from "./App";
 import { ToastProvider } from "./components/Toast";
+import { CrashForReview, ErrorBoundary } from "./components/ErrorBoundary";
 import { StoreProvider } from "./store";
 import "./styles.css";
 
@@ -14,7 +15,10 @@ createRoot(document.getElementById("root")!).render(
     <Router>
       <StoreProvider>
         <ToastProvider>
-          <App />
+          <ErrorBoundary>
+            <CrashForReview />
+            <App />
+          </ErrorBoundary>
         </ToastProvider>
       </StoreProvider>
     </Router>

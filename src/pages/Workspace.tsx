@@ -1,8 +1,10 @@
 import { Menu, SquarePen, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Navigate, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Mascot } from "../components/Brand";
 import { UserMenu } from "../components/UserMenu";
+import { Header } from "../components/Header";
+import { NotFound } from "../components/NotFound";
 import { useToast } from "../components/Toast";
 import { getMaterial } from "../data/materials";
 import { useStore } from "../store";
@@ -12,7 +14,6 @@ import { PanelMenu } from "../workspace/PanelMenu";
 import { ToneMenu } from "../workspace/ToneMenu";
 import { UnitMenu } from "../workspace/UnitMenu";
 import { QuizTab } from "../workspace/QuizTab";
-import { HOME } from "../App";
 
 type Tab = "agent" | "review";
 
@@ -92,7 +93,8 @@ export function Workspace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!material) return <Navigate to={HOME} replace />;
+  // 없는 단원 주소: a page that says so, with a way back (새로 필요 4번), instead of silently jumping away
+  if (!material) return <><Header /><NotFound /></>;
   const section = material.sections.find((s) => s.id === active);
   const hasChat = (state.chats[material.id] ?? []).length > 0;
 

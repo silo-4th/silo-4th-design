@@ -214,6 +214,41 @@ code, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; 
 .google-btn:disabled { cursor: default; color: var(--color-ink-2); }
 .google-btn.is-done { border-color: var(--color-green); background: var(--color-green-25); color: var(--color-green-600); }
 .google-btn { transition: background 0.2s, border-color 0.2s, color 0.2s; }
+/* 로그인 실패: the same pale pink note as the other failures, right under the button */
+/* 로그아웃 실패: the same pale pink note, small, under the menu item */
+.user-pop-fail { margin: --spacing(1) --spacing(2) --spacing(2); padding: --spacing(2) --spacing(3); border-radius: var(--radius-sm); background: var(--color-red-50); color: var(--color-red); font-size: 12.5px; font-weight: 500; line-height: 1.5; animation: recall-text-in 0.25s ease-out; }
+.login-fail.start-fail { max-width: none; margin: --spacing(3) 0 0; }   /* 저장 실패: same note, between the consent and the 시작 button */
+/* 시작 화면 (실제 서비스 /start를 시안에 옮긴 검토용) */
+/* 시작 계획: the same rhythm as the 꺼내 먹기 start card — card padding 40 top (+16 room for the hop) / 48 bottom, picture→title 20,
+   title→sub 8, sub→content 24, content→button 28. Inside the form: label→field 8, field→consent 16. */
+/* date field with the calendar icon in front (the browser's own icon on the right is hidden) */
+.date-field { position: relative; display: block; }
+.date-field .input { width: 100%; padding-left: 44px; cursor: pointer; }
+.date-field .input::-webkit-calendar-picker-indicator { display: none; }
+.date-field-ico { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--color-gray); pointer-events: none; }
+.start-plan-art { display: flex; justify-content: center; margin: --spacing(4) 0 --spacing(5); }   /* +16 above for the hop, so it never crowds the card's top edge */
+.start-plan-art .mascot--live { margin: 0; }
+.start-plan .recall-title { margin-top: 0; }
+.start-plan .recall-sub { margin-bottom: --spacing(6); }
+.start-plan .field { gap: --spacing(2); margin-bottom: --spacing(5); }
+.start-plan .recall-cta { margin-top: --spacing(4); }
+/* a short card: keep full room around it even where the 꺼내 먹기 screens squeeze their padding for short windows */
+.recall-body:has(.start-plan) { padding: --spacing(10) --spacing(10) --spacing(14) !important; }   /* bottom = top + the 16 kept above 플러키 for its hop */
+@media (max-width: 520px) { .recall-body:has(.start-plan) { padding: --spacing(8) --spacing(5) --spacing(12) !important; } }
+.start-plan .recall-cta .login-fail.start-fail { width: 100%; margin: calc(-1 * --spacing(1)) 0 0; }   /* recall-cta has a 20 gap; the note sits 16 under the button */
+.start-screen { padding: --spacing(8) --spacing(6) --spacing(6); }
+.start-title { margin: 0 0 --spacing(2); font-size: 22px; letter-spacing: -0.03em; }
+/* consent: a plain checkbox row (no box around it), as agreement lines usually are */
+.start-consent { display: flex; align-items: flex-start; gap: --spacing(2.5); font-size: 14px; line-height: 1.55; color: var(--color-ink-2); }
+/* own checkbox so the tick is white on green (the browser's own picks a black tick on this green) */
+.start-consent input { appearance: none; -webkit-appearance: none; margin: 2px 0 0; width: 18px; height: 18px; flex: none; border: 1.5px solid var(--color-gray-3); border-radius: 5px; background: #fff center / 12px no-repeat; cursor: pointer; transition: background-color 0.15s, border-color 0.15s; }
+.start-consent input:checked { border-color: var(--color-green); background-color: var(--color-green); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E"); }
+.start-consent input:focus-visible { outline: 2px solid var(--color-green); outline-offset: 2px; }
+.start-consent input:disabled { cursor: default; }
+.start-consent { cursor: pointer; }
+.start-cta { margin-top: --spacing(7); }
+.login-fail.start-fail + .start-cta { margin-top: --spacing(3); }
+.login-fail { max-width: 380px; margin: --spacing(2.5) 0 0; padding: --spacing(3) --spacing(4); border-radius: var(--radius-md); background: var(--color-red-50); color: var(--color-red); font-size: 14px; font-weight: 500; text-align: center; animation: recall-text-in 0.25s ease-out; }
 .spinner { animation: spinner-turn 0.8s linear infinite; color: var(--color-gray); }
 @keyframes spinner-turn { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }
@@ -259,6 +294,13 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 /* 해설 제목 줄: 왼쪽 제목, 오른쪽 결과 뱃지(개념 혼동 등) */
 .explain-head { display: flex; align-items: center; justify-content: space-between; gap: --spacing(2); margin-bottom: --spacing(1.5); }
 .explain-head b { margin-bottom: 0; }
+/* 채점 결과를 받지 못했을 때: the 해설 spot turns pale pink with the message in red (same as the chat's failed bubble) */
+.explain.grade-fail { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; column-gap: --spacing(3); row-gap: --spacing(1); margin-top: --spacing(5); background: var(--color-red-50); color: var(--color-red); font-size: 14px; font-weight: 500; text-align: center; }
+/* 다시 시도 right after the message: red like the message, one step bolder, thin underline (the padding keeps a comfortable tap area) */
+.grade-retry { display: inline-flex; align-items: center; margin: -4px -6px; padding: 4px 6px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; color: var(--color-red); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.grade-retry:hover { background: rgba(229, 80, 60, 0.08); }
+.bubble-retry.grade-pill { align-self: auto; }   /* the chat's 다시 시도 pill, on the same line as the message */
+.recall-later.grade-skip { display: block; margin: --spacing(2.5) auto 0; color: #9ca1a6; font-weight: 500; }
 /* 결과 한 줄: 해설 박스 맨 위에서 맞았는지 바로 보이게 */
 .verdict, .explain-head .verdict { display: inline-flex; align-items: center; gap: --spacing(1); margin: 0; font-size: 15px; font-weight: 700; }
 /* 아이콘은 원 없이 체크·엑스만, 글자 굵기에 맞춰 굵게 */
@@ -632,6 +674,16 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 .wait-note { font-size: 13px; color: var(--color-gray); white-space: nowrap; animation: recall-text-in 0.35s ease-out; }
 .wait-stack { display: flex; flex-direction: column; align-items: flex-start; gap: --spacing(1.5); }
 .wait-note--below { font-size: 12px; padding-left: 2px; }
+/* 답을 받지 못했을 때: a pale pink bubble with the message in red (no icon), a small round 다시 시도 centred under it */
+.msg.bot .bubble.bubble-error { display: inline-flex; flex-direction: column; align-items: flex-start; gap: --spacing(2); color: var(--color-red); background: var(--color-red-50); }
+.bubble-error-msg { display: flex; align-items: center; gap: --spacing(1.5); font-weight: 500; }
+.bubble-retry { align-self: center; display: inline-flex; align-items: center; gap: --spacing(1); height: 28px; padding: 0 --spacing(3); border: 1px solid var(--color-line); border-radius: 999px; background: #fff; font-size: 12.5px; font-weight: 600; color: var(--color-ink-2); }
+.bubble-retry:hover { border-color: var(--color-gray-3); color: var(--color-ink); }
+/* 답이 오다가 끊겼을 때: the pink bubble sits right under the partial answer, sharing its 플러키 */
+.chat .msg.msg-follow { margin-top: calc(-1 * --spacing(2)); }
+/* (preview A안): the partial answer stays; a pink strip at the bottom of the same bubble says it stopped */
+.msg.bot .bubble.bubble-cut { padding-bottom: 0; overflow: hidden; }
+.bubble-cut-foot { display: flex; flex-direction: column; align-items: center; gap: --spacing(2); margin: --spacing(3) calc(-1 * --spacing(3.5)) 0; padding: --spacing(3) --spacing(3.5); background: var(--color-red-50); color: var(--color-red); }
 /* 시안 검토 페이지 */
 .pv-row { display: flex; flex-wrap: wrap; gap: --spacing(6); justify-content: center; }
 .pv-panel { width: 380px; background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg); overflow: hidden; }
@@ -641,12 +693,75 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 .pv-chat { min-height: 220px; }
 .pv-panel--tall { width: 420px; height: 680px; display: flex; flex-direction: column; }
 .pv-panel-body { flex: 1; display: flex; flex-direction: column; }
+.pv-tabs { display: flex; justify-content: center; gap: --spacing(6); border-bottom: 1px solid var(--color-line-2); font-size: 14px; font-weight: 600; color: var(--color-gray); }
+.pv-tabs span { padding: --spacing(3) 0; border-bottom: 2px solid transparent; }
+.pv-tabs span.on { color: var(--color-ink); border-color: var(--color-ink); }
+.pv-menu-host { position: relative; background: rgba(18, 19, 20, 0.16); }
+.pv-panel-menu { top: 0; animation: none; }
 /* 문제를 만들지 못했을 때 / 목록을 불러오지 못했을 때: 플러키 with a round X sign, in the quiz home's picture spot */
-.quiz-fail-sign { width: 224px; height: 160px; }
+.quiz-fail-sign { width: 139px; height: 99px; }   /* every X-sign 플러키: same size as the quiz home picture (same 448×320 canvas) */
+.not-found-box .quiz-fail-sign.grubby { width: 168px; height: 120px; }   /* the full-page scruffy 플러키 (no sign) stays a little bigger */
+/* 예상하지 못한 오류: scruffy 플러키 — a slow dazed sway and the usual blink (the mouth stays still) */
+.quiz-fail-sign.grubby { position: relative; }
+.grubby-body { position: absolute; inset: 0; display: block; transform-origin: 50% 92%; animation: grubby-sway 3.6s ease-in-out infinite; }
+.mascot.quiz-fail-sign.grubby .grubby-body img { position: absolute; inset: 0; animation: none; }   /* beats the small-mascot bob rule */
+@keyframes grubby-sway { 0%, 100% { transform: rotate(-2.5deg) translateY(0); } 50% { transform: rotate(2.5deg) translateY(-2px); } }
+/* eyes: the quiz-home 플러키's blink (same 448×320 canvas and body, so the same lid boxes, colours and feathering);
+   both lids run the one shared blink animation, so the eyes always close together */
+.grubby .mascot-lid { top: 39.8%; height: 27.8%; }
+.grubby .mascot-lid.l { left: 34%; width: 15.71%; }
+.grubby .mascot-lid.r { left: 53.64%; width: 14.93%; }
+.grubby .mascot-lid::after { border-bottom-width: 2px; animation-name: grubby-lash; }
+.grubby .mascot-lid::before { filter: blur(1.2px); animation-name: grubby-blink; }
+/* the usual blink, minus its double blink: one quick blink per 5.6s */
+@keyframes grubby-blink { 0%, 46%, 49.5%, 100% { transform: scaleY(0); } 47.6% { transform: scaleY(1.04); } }
+@keyframes grubby-lash { 0%, 46.8%, 48.6%, 100% { opacity: 0; } 47.4%, 48% { opacity: 1; } }
+.grubby .mascot-lid.l::before { background: linear-gradient(180deg, #60e3a3 0%, #34cf93 45%, #16b87d 100%); }
+.grubby .mascot-lid.r::before { background: linear-gradient(180deg, #b6f3b5 0%, #6fdca0 45%, #22c47e 100%); }
+@media (prefers-reduced-motion: reduce) { .grubby-body { animation: none; } }
+.quiz-home.quiz-fail--compact { padding: --spacing(16) --spacing(4) --spacing(8); margin: 0; }
+
+.quiz-home.quiz-fail--compact h3 { margin-top: --spacing(2); font-size: 15px; }
+.quiz-home.quiz-fail--compact > p { font-size: 12.5px; }
+.quiz-home.quiz-fail--compact .quiz-home-cta { width: auto; margin-top: --spacing(4); }
+/* 대화 기록이 아직 없을 때: same compact text as the failure, without a picture */
+.quiz-home.history-empty h3 { margin-top: 0; }
+/* 없는 단원 주소: the failure layout on its own page, a little above the middle */
+.not-found { min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; padding: --spacing(8) --spacing(6); background: #fff; }
+.not-found-box { width: 100%; max-width: 360px; }
 /* 지난 문제 목록 불러오는 중: grey rows with the real rows' height (title line + count line) */
 .quiz-history-skel { cursor: default; min-height: 62px; }
 .quiz-history-skel:hover { background: none; }
 .quiz-history-skel .grow { gap: 8px; }
+/* 퀴즈 문제를 만드는 중 / 풀던 문제 불러오는 중: the quiz card's own shape in grey bars (gauge, chip, question, 4 options) */
+.quiz-skel { display: flex; flex-direction: column; }
+.quiz-skel .quiz-strip i { background: var(--color-line-2); }
+.quiz-skel-opt { height: 48px; margin-top: 10px; border-radius: var(--radius-md); }
+.quiz-skel-opt:first-of-type { margin-top: 24px; }
+/* while it is being made (5–10s): thinking 플러키 centred like the quiz home, no skeleton */
+.quiz-making-center h3 { margin-top: --spacing(4); }
+/* 말풍선만 로딩: the chat's waiting bubble, enlarged — a soft grey bubble (small tail at the lower left) with the same dots */
+.making-bubble { display: grid; place-items: center; width: 88px; height: 60px; border-radius: 22px 22px 22px 8px; background: var(--color-bg); }
+.making-bubble .typing { gap: 7px; padding: 0; }
+.making-bubble .typing i { width: 10px; height: 10px; background: var(--color-gray-3); }
+/* the thought cloud from the 꺼내 먹기 start art (empty), floating gently, with the chat's typing dots in its middle */
+.making-cloud { position: relative; display: block; width: 136px; height: 106px; animation: recall-cookie-float 2.6s ease-in-out infinite; }
+.making-cloud img { display: block; width: 100%; height: 100%; }
+.making-cloud .typing { position: absolute; left: 58.5%; top: 47%; transform: translate(-50%, -50%); gap: 7px; padding: 0; }
+/* dots in the cloud's own cool grey, a little puffy (lit from the top like the cloud), so they read as part of it */
+.making-cloud .typing i { width: 8px; height: 8px; background: radial-gradient(circle at 40% 32%, #dfe6eb 0%, #b9c4cc 55%, #a3afb8 100%); box-shadow: 0 1px 1.5px rgba(70, 95, 110, 0.18); }
+/* (earlier idea: 플러키 + line above the skeleton) */
+.quiz-making { display: flex; align-items: center; gap: --spacing(3); margin-bottom: --spacing(5); padding: --spacing(3) --spacing(4); border-radius: var(--radius-lg); background: var(--color-bg); }
+.quiz-making b { display: block; font-size: 14.5px; }
+.quiz-making span:not(.mascot) { display: block; margin-top: 2px; font-size: 12.5px; color: var(--color-gray); }
+/* 지난 대화를 불러오는 중: message-shaped bars — my bubble right, 플러키 dot + answer lines left */
+.chat-skel-list { display: flex; flex-direction: column; gap: --spacing(6); }
+.chat-skel-round { display: flex; flex-direction: column; gap: --spacing(3.5); }
+.chat-skel-me { align-self: flex-end; height: 40px; border-radius: 14px 14px 4px 14px; }
+.chat-skel-bot { display: flex; gap: --spacing(2.5); }
+.chat-skel-avatar { flex: none; width: 26px; height: 26px; border-radius: 50%; }
+.chat-skel-bubble { flex: 1; display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
+.chat-skel-line { height: 13px; }
 @keyframes blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
 
 .quiz-done { text-align: center; padding: 0 --spacing(1) --spacing(1); }
@@ -726,7 +841,7 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 /* one round: every question stacked in a single vertical scroll */
 .quiz-history-sub { margin: 0 0 --spacing(4); font-size: 13px; }
 .quiz-history-detail { padding: --spacing(5) 0 --spacing(10); }   /* breathing room under the title bar, and after the last question */
-.quiz-history-q + .quiz-history-q { margin-top: --spacing(6); padding-top: --spacing(6); border-top: 1px solid var(--color-line-2); }
+.quiz-history-q + .quiz-history-q { margin-top: --spacing(12); }   /* no divider line: 48px of space between questions */
 .quiz-history-q-head { display: flex; align-items: center; gap: --spacing(1.5); }
 .quiz-history-q-head .chip:last-child { margin-left: auto; }
 /* both badges the same size and on one line (the concept one drops its 꺼내 보기 size and bottom margin) */
@@ -863,11 +978,12 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 .thumb .snippet { font-size: 12px; opacity: 0.8; margin-top: --spacing(1.5); }
 .thumb.soon { background: var(--color-line-2); color: var(--color-gray); }
 .course.soon h4 { color: var(--color-gray); }
-.preview-card { background: #fff; border-radius: 14px; padding: --spacing(4); box-shadow: 0 12px 32px rgba(0, 90, 50, 0.12); width: 300px; }
-.preview-card .opt { padding: 9px --spacing(3); font-size: 13px; box-shadow: none; }
-.preview-card .q-result { padding: --spacing(2.5) --spacing(3); font-size: 13px; margin-top: --spacing(2.5); }
-.login-art { background: var(--color-green-25); border: 1px solid var(--color-green-50); justify-content: center; align-items: center; gap: --spacing(7); }
-.login-art .points { width: 100%; max-width: 380px; }
+/* login art: headline on top, Plucky's two speech bubbles, Plucky at the laptop filling the bottom (cut by the panel) */
+.login-art { background: #fff7df; border: 0; justify-content: flex-start; align-items: center; padding: --spacing(32) --spacing(10) 0; }
+.login-art-head { align-self: flex-start; margin-left: 2%; text-align: left; font-size: 28px; font-weight: 800; line-height: 1.4; letter-spacing: -0.02em; color: var(--color-ink); }
+.login-bubbles { position: relative; z-index: 1; align-self: flex-start; display: flex; flex-direction: column; align-items: flex-start; gap: --spacing(4); margin: --spacing(8) 0 0 2%; }
+.login-bubble { margin: 0; padding: 13px 20px; border-radius: 18px; background: #fff; font-size: 15px; font-weight: 600; color: var(--color-ink); box-shadow: 0 8px 24px rgba(140, 105, 20, 0.12); }
+.login-plucky { position: absolute; left: 50%; bottom: -7%; width: 61%; max-width: 466px; transform: translateX(-26%); pointer-events: none; user-select: none; }
 
 @media (max-width: 860px) {
   .ws-top { gap: --spacing(2); padding: 0 --spacing(3); }
@@ -877,8 +993,11 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
   .banner { flex-wrap: wrap; }
   .banner > :last-child { margin-left: auto; }
   .banner > span, .banner > div { flex: 1 1 220px; }
-  .login-art { margin: --spacing(4); padding: --spacing(6); }
-  .preview-card { width: 100%; }
+  .login-art { margin: --spacing(4); padding: --spacing(8) --spacing(6) 0; min-height: 440px; }
+  .login-art-head { font-size: 23px; }
+  .login-bubbles { margin-top: --spacing(8); }
+  .login-bubble { font-size: 13.5px; padding: 10px 16px; }
+  .login-plucky { width: min(51%, 277px); bottom: -6%; }
 }
 
 @media (max-width: 520px) {
@@ -978,6 +1097,20 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 @media (prefers-reduced-motion: reduce) { .recall-want-bob, .recall-want-droop::before, .mascot.recall-intro-art .recall-want-bob img.recall-want-frown { animation: none; } }
 /* intro head (art, title, line) centred over the list */
 .recall-intro-center { text-align: center; }
+/* 공용 로딩: the 꺼내 먹기 start picture with an empty thought cloud; dots blink in the cloud (centre 70.1% / 19.5%) */
+.loading-art { display: block; width: 136px; height: 110px; position: relative; left: 19.5px; }   /* body (not the cloud) in the middle, like the 꺼내 먹기 start (body centre is 35.7% across) */
+.mascot.loading-art .recall-want-bob img { position: absolute; inset: 0; width: 100%; height: 100%; animation: none; }
+.loading-art .mascot-lid { top: 50.6%; height: 22.8%; }
+.loading-art .mascot-lid.l { left: 20.8%; width: 14.6%; }
+.loading-art .mascot-lid.r { left: 39.1%; width: 13.9%; }
+.loading-art .mascot-lid::before { filter: blur(1px); }
+.loading-art .mascot-lid.l::before { background: linear-gradient(180deg, #60e3a3 0%, #34cf93 45%, #16b87d 100%); }
+.loading-art .mascot-lid.r::before { background: linear-gradient(180deg, #b6f3b5 0%, #6fdca0 45%, #22c47e 100%); }
+.loading-art .mascot-lid::after { border-bottom-width: 1.8px; }
+.loading-dots { position: absolute; left: 70.1%; top: 20.5%; transform: translate(-50%, -50%); }
+.loading-dots .typing { gap: 3px; padding: 0; }
+.loading-dots .typing i { width: 4.5px; height: 4.5px; background: radial-gradient(circle at 40% 32%, #dfe6eb 0%, #b9c4cc 55%, #a3afb8 100%); }
+.loading-state h3 { margin-top: --spacing(4); }
 .recall-row { display: flex; align-items: center; gap: --spacing(2.5); padding: --spacing(3.5) --spacing(4); border: 1px solid var(--color-line); border-radius: var(--radius-md); background: #fff; }
 .recall-row-name { font-size: 15px; font-weight: 700; }
 .recall-row-src { margin-left: auto; font-size: 12.5px; color: var(--color-gray-2); white-space: nowrap; }
@@ -1082,3 +1215,10 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 }
 }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* 로그인 그림: 세로가 짧은 화면에서는 플럭키를 줄여서 말풍선과 겹치지 않게 */
+@media (max-height: 760px) and (min-width: 861px) {
+  .login-art { padding-top: --spacing(20); }
+  .login-bubbles { margin-top: --spacing(5); }
+  .login-plucky { width: 52%; }
+}

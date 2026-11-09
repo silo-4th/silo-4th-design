@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { CONCEPTS } from "../data/materials";
 import { getQuestion, type ErrorTag, type Question } from "../data/questions";
 import { tagFor, useStore, type Confidence, type Source } from "../store";
+import { GradeFail, gradeFailsNow } from "./GradeFail";
 
 /** The card's main action, handed to a host that shows it as a fixed button below the card. */
 export type QuizCta = { label: string; disabled: boolean; run: () => void; /** 빈칸·서술형: move on without answering (counted as wrong) */ skip?: () => void } | null;
@@ -196,11 +197,18 @@ function WrittenCard({ q, source, reviewOf, hints, showExplain, className, foote
 
   // 정답 확인: on once there is an answer and a confidence; shown in the panel's bottom bar (or inline without one)
   const canCheck = stage === "write" && !empty && conf !== null;
-  const check = () => { if (canCheck) finish(gradeAs(), conf!); };
+  // 채점 결과를 받지 못했을 때: the answer stays, the pink note offers 다시 시도 / 다음 문제로, and the bottom button steps aside
+  const [gradeFailed, setGradeFailed] = useState(false);
+  const check = () => {
+    if (!canCheck) return;
+    if (gradeFailsNow()) { setGradeFailed(true); return; }
+    setGradeFailed(false);
+    finish(gradeAs(), conf!);
+  };
   useEffect(() => {
-    onCta?.(stage === "write" ? { label: "정답 확인", disabled: !canCheck, run: check, skip } : null);
+    onCta?.(stage === "write" && !gradeFailed ? { label: "정답 확인", disabled: !canCheck, run: check, skip } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onCta, stage, text, conf, hintN]);
+  }, [onCta, stage, text, conf, hintN, gradeFailed]);
 
   // "이 문제 건너뛰기" (same as 꺼내 보기): recorded as a wrong guess, and the host moves straight on to the next question
   const skip = () => {
@@ -269,7 +277,8 @@ function WrittenCard({ q, source, reviewOf, hints, showExplain, className, foote
       )}
 
       {stage === "write" && <ConfChips q={talk ? "쓴 설명, 얼마나 확실해요?" : "쓴 답, 얼마나 확실해요?"} off={empty} value={conf} onChange={setConf} />}
-      {stage === "write" && !onCta && <CheckButton disabled={!canCheck} onClick={check} />}
+      {stage === "write" && gradeFailed && <GradeFail onRetry={check} onNext={skip} />}
+      {stage === "write" && !onCta && !gradeFailed && <CheckButton disabled={!canCheck} onClick={check} />}
 
       {talk && stage !== "write" && (
         <div className="talk-check">
@@ -315,14 +324,22 @@ function ChoiceCard({ q, source, reviewOf, hints, showExplain, className, footer
   const [hintN, setHintN] = useState(0);
   const [result, setResult] = useState<QuizResult | null>(null);
   const canCheck = stage === "pick" && picked !== null && conf !== null;
+  const [gradeFailed, setGradeFailed] = useState(false);
   useEffect(() => {
     if (!onCta) return;
-    onCta(stage === "pick" ? { label: "정답 확인", disabled: !canCheck, run: () => conf && submit(conf) } : null);
+    onCta(stage === "pick" && !gradeFailed ? { label: "정답 확인", disabled: !canCheck, run: () => conf && submit(conf) } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onCta, stage, picked, conf, hintN]);
+  }, [onCta, stage, picked, conf, hintN, gradeFailed]);
+  // 다음 문제로 after a failed grading: recorded as not graded (a wrong guess) and the host moves on
+  const skipUngraded = () => {
+    dispatch({ type: "attempt", attempt: { qid, correct: false, confidence: "guess", hints: hintN, source, reviewOf }, picked: picked ?? -1 });
+    onAnswered?.({ qid, correct: false, confidence: "guess", tag: tagFor(false, "guess", undefined), skipped: true });
+  };
 
   const submit = (confidence: Confidence) => {
     if (picked === null) return;
+    if (gradeFailsNow()) { setGradeFailed(true); return; }
+    setGradeFailed(false);
     const correct = picked === q.answer;
     dispatch({ type: "attempt", attempt: { qid, correct, confidence, hints: hintN, source, reviewOf }, picked });
     const r: QuizResult = { qid, correct, confidence, tag: tagFor(correct, confidence, q.options[picked].tag), why: q.options[picked].why };
@@ -362,7 +379,8 @@ function ChoiceCard({ q, source, reviewOf, hints, showExplain, className, footer
       </div>
 
       {stage === "pick" && <ConfChips q="고른 답, 얼마나 확실해요?" off={picked === null} value={conf} onChange={setConf} />}
-      {stage === "pick" && !onCta && <CheckButton disabled={!canCheck} onClick={() => conf && submit(conf)} />}
+      {stage === "pick" && gradeFailed && <GradeFail onRetry={() => conf && submit(conf)} onNext={skipUngraded} />}
+      {stage === "pick" && !onCta && !gradeFailed && <CheckButton disabled={!canCheck} onClick={() => conf && submit(conf)} />}
 
       {stage === "done" && result && (
         <>

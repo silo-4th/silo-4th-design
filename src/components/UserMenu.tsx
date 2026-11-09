@@ -10,6 +10,11 @@ export function UserMenu() {
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  // 로그아웃 실패 (다듬기 8번): the menu stays open and a small pale pink note sits under 로그아웃, which can be pressed again.
+  // The prototype never fails: ?logout=fail makes the first try fail.
+  const failNext = useRef(new URLSearchParams(window.location.search).get("logout") === "fail");
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { if (!open) setFailed(false); }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -51,6 +56,7 @@ export function UserMenu() {
             role="menuitem"
             className="user-pop-item"
             onClick={() => {
+              if (failNext.current) { failNext.current = false; setFailed(true); return; }
               dispatch({ type: "logout" });
               nav("/login");
             }}
@@ -58,6 +64,7 @@ export function UserMenu() {
             <LogOut size={15} />
             로그아웃
           </button>
+          {failed && <p className="user-pop-fail" role="alert">로그아웃하지 못했어요. 다시 시도해 주세요.</p>}
         </div>
       )}
     </div>

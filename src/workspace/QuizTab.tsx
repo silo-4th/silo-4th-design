@@ -1,7 +1,8 @@
 import { Check, ChevronLeft, House, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Mascot } from "../components/Brand";
-import failArtUrl from "../assets/mascot-fail.webp";
+import { FailState } from "../components/FailState";
+import { LoadingCloud } from "../components/LoadingState";
 import mascotUrl from "../assets/mascot.png";
 import quizArtUrl from "../assets/mascot-quiz.webp";
 import quizMouthOpenUrl from "../assets/mascot-quiz-mouth-open.webp";
@@ -19,6 +20,8 @@ import { ReviewTab } from "./SidePanels";
 type Format = "대화형" | "객관식" | "빈칸" | "랜덤";
 
 const SET_SIZE = 3;
+/** units whose saved set has already been brought back since the page loaded (so tab switches don't show the loading again) */
+const RESUMED = new Set<string>();
 /** Asking this many questions in chat is enough to build a set from the conversation. */
 const ENOUGH_QUESTIONS = 2;
 
@@ -117,6 +120,19 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
   // 'AI 맞춤 문제 풀기' shows the failure screen (다시 시도 then works).
   const [failOnce, setFailOnce] = useState(() => new URLSearchParams(window.location.search).get("quiz") === "fail");
   const [genFailed, setGenFailed] = useState(false);
+  // 로딩 (확인만 1번): the shared grey-bubble loading while a set is being made, or while a saved set comes back after a
+  // reload. The prototype has both at once, so they show ~1.2s / ~0.6s; the real service shows them until the set arrives.
+  // "resuming" only once per page load (a reload), not every time the learner switches back to this tab
+  const [loading, setLoading] = useState<null | "making" | "resuming">(() =>
+    !preset && saved && saved.phase === "quiz" && resumeAt > 0 && resumeAt < saved.set.length && !RESUMED.has(material.id) ? "resuming" : null,
+  );
+  useEffect(() => {
+    if (loading !== "resuming") return;
+    const t = window.setTimeout(() => { RESUMED.add(material.id); setLoading(null); }, 600);
+    return () => window.clearTimeout(t);
+  }, [loading, material.id]);
+  const making = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(making.current), []);
 
   if (history) return <QuizHistory material={material} onBack={() => setHistory(false)} />;
 
@@ -144,11 +160,23 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
   };
 
   const start = () => {
-    if (failOnce) { setFailOnce(false); setGenFailed(true); return; }
     setGenFailed(false);
-    begin(pick(), false);
-    setHome(false);
+    setLoading("making");
+    making.current = window.setTimeout(() => {
+      setLoading(null);
+      if (failOnce) { setFailOnce(false); setGenFailed(true); return; }
+      begin(pick(), false);
+      setHome(false);
+    }, 1200);
   };
+
+  if (loading) {
+    return (
+      <div className="panel-body" style={{ padding: 20 }}>
+        <LoadingCloud label={loading === "making" ? "문제를 만들고 있어요" : "풀던 문제를 불러오고 있어요"} />
+      </div>
+    );
+  }
 
   if (genFailed) {
     return (
@@ -348,20 +376,6 @@ const statusOf = (a: { correct: boolean; confidence: string }) =>
  * 지난 문제: first a list of past rounds (newest first); opening one shows every question of that round
  * stacked in one vertical scroll — question, 내 답 / 정답, and 해설 — like the result screen.
  */
-/** 불러오기·만들기에 실패했을 때 (퀴즈 탭 5번, 지난 문제 7번): 플러키 holding up a round X sign, a calm title, one 다시 시도. */
-function FailState({ title, onRetry }: { title: string; onRetry: () => void }) {
-  return (
-    <div className="quiz-home quiz-fail" role="alert">
-      <span className="mascot quiz-fail-sign" aria-hidden><img src={failArtUrl} alt="" width={224} height={160} draggable={false} /></span>
-      <h3>{title}</h3>
-      <p className="muted">잠시 뒤 다시 시도해 주세요.</p>
-      <div className="quiz-home-cta">
-        <button className="btn btn-dark btn-lg btn-block" onClick={onRetry}>다시 시도</button>
-      </div>
-    </div>
-  );
-}
-
 function QuizHistory({ material, onBack }: { material: Material; onBack: () => void }) {
   const { state } = useStore();
   const rounds = useMemo(() => quizRounds(state.attempts, material.id), [state.attempts, material.id]);

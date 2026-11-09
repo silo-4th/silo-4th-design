@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Calendar, LoaderCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Mascot } from "../components/Brand";
 import { type QuizResult } from "../components/QuizCard";
@@ -13,7 +14,19 @@ export function Setup() {
   const { state, dispatch } = useStore();
   const nav = useNavigate();
   // first visit: no exam picker any more — go straight to a short skill check in the 꺼내 보기 layout
-  const [step, setStep] = useState<"intro" | "quiz" | "done">("intro");
+  // 시작 계획(시험 날짜 + 기록 저장 동의)부터: 실제 서비스의 /start와 같은 첫 단계, 저장되면 실력 진단으로
+  const [step, setStep] = useState<"plan" | "intro" | "quiz" | "done">("plan");
+  const [planState, setPlanState] = useState<"idle" | "saving" | "failed">("idle");
+  // 저장 실패(7번) 확인용: ?start=fail이면 첫 저장이 실패해요
+  const [failSave, setFailSave] = useState(() => new URLSearchParams(window.location.search).get("start") === "fail");
+  const savePlan = () => {
+    setPlanState("saving");
+    window.setTimeout(() => {
+      if (failSave) { setFailSave(false); setPlanState("failed"); return; }
+      setPlanState("idle");
+      setStep("intro");
+    }, 900);
+  };
   // daily study time is no longer asked during setup; keep the default plan length
   const minutes = 30;
   const [idx, setIdx] = useState(0);
@@ -30,6 +43,8 @@ export function Setup() {
     if (idx + 1 < total) setIdx(idx + 1);
     else setStep("done");
   };
+
+  if (step === "plan") return <StartPlan state={planState} onStart={savePlan} />;
 
   return (
     <main className="recall">
@@ -155,5 +170,59 @@ function DiagnosisResult({ results, onStart }: { results: QuizResult[]; onStart:
       </div>
       <button className="btn btn-primary btn-lg btn-block" style={{ marginTop: 24 }} onClick={onStart}>내 학습으로 가기</button>
     </div>
+  );
+}
+
+/**
+ * 시작 계획 (실제 서비스 /start를 시안에 옮긴 것): 시험 날짜와 기록 저장 동의를 받는 첫 단계. 실력 진단과 같은 카드 틀
+ * (가운데 칼럼 + 아래 큰 버튼, 위 제목 줄은 없음)이라 다음 단계로 자연스럽게 이어진다. state는 검토용으로 저장 중·실패를 보여 준다.
+ */
+export function StartPlan({ state = "idle", onStart }: { state?: "idle" | "saving" | "failed"; onStart?: () => void }) {
+  const [date, setDate] = useState("2026-11-29");
+  const [agree, setAgree] = useState(true);
+  const saving = state === "saving";
+  return (
+    <main className="recall">
+      <section className="recall-frame">
+        <div className="recall-body">
+          <div className="recall-col start-plan">
+            {/* 플러키가 맞이하며 시작: 꺼내 먹기·퀴즈 홈처럼 맨 위 가운데 */}
+            <span className="start-plan-art"><Mascot size={88} live mood="smile" /></span>
+            <h1 className="recall-title recall-intro-center">학습을 시작하기 전에 알려 주세요</h1>
+            <p className="recall-sub recall-intro-center">시험 날짜를 저장하고 바로 시작해요</p>
+            <div className="field">
+              <label htmlFor="exam-date">시험 날짜</label>
+              {/* the calendar icon sits in front, so the browser's date picker (which opens under the field's left edge)
+                  appears right under it; clicking anywhere in the field opens the picker */}
+              <span className="date-field">
+                <Calendar size={17} className="date-field-ico" aria-hidden />
+                <input
+                  id="exam-date"
+                  className="input"
+                  type="date"
+                  value={date}
+                  disabled={saving}
+                  onChange={(e) => setDate(e.target.value)}
+                  onClick={(e) => { try { e.currentTarget.showPicker(); } catch { /* older browsers open it themselves */ } }}
+                />
+              </span>
+            </div>
+            <label className={`start-consent ${agree ? "on" : ""}`}>
+              <input type="checkbox" checked={agree} disabled={saving} onChange={(e) => setAgree(e.target.checked)} />
+              학습 기록 저장과 분석에 동의해요
+            </label>
+            <div className="recall-cta">
+              {saving ? (
+                <button className="btn btn-dark btn-lg btn-block" disabled aria-busy="true" style={{ opacity: 1 }}><LoaderCircle size={18} className="spinner" style={{ color: "#fff" }} />저장하는 중…</button>
+              ) : (
+                <button className="btn btn-dark btn-lg btn-block" disabled={!date || !agree} onClick={onStart}>시작하기</button>
+              )}
+              {/* 저장 실패: right under the button (like the login failure), so the button the learner just pressed doesn't move */}
+              {state === "failed" && <p className="login-fail start-fail" role="alert">저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.</p>}
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

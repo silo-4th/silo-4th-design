@@ -1,7 +1,8 @@
-import { Check, CheckCircle2, LoaderCircle } from "lucide-react";
+import { Check, LoaderCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GoogleMark, Mascot } from "../components/Brand";
+import { GoogleMark } from "../components/Brand";
+import laptopUrl from "../assets/plucky-laptop.webp";
 import { DEFAULT_HANDLE, useStore } from "../store";
 
 export function Login() {
@@ -12,12 +13,22 @@ export function Login() {
   const [phase, setPhase] = useState<"idle" | "loading" | "done">("idle");
   const timers = useRef<number[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  // 로그인 실패 (다듬기 5번): the button comes back so it can be pressed again, and a pale pink note under it says so.
+  // The prototype never fails: ?login=fail makes the first try fail.
+  const failNext = useRef(new URLSearchParams(window.location.search).get("login") === "fail");
+  const [failed, setFailed] = useState(false);
 
   const start = () => {
     if (phase !== "idle") return;
     const who = name.trim() || DEFAULT_HANDLE;
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setFailed(false);
     setPhase("loading");
+    if (failNext.current) {
+      failNext.current = false;
+      timers.current.push(window.setTimeout(() => { setPhase("idle"); setFailed(true); }, calm ? 200 : 700));
+      return;
+    }
     timers.current.push(
       window.setTimeout(() => setPhase("done"), calm ? 200 : 500),
       window.setTimeout(() => {
@@ -30,31 +41,15 @@ export function Login() {
 
   return (
     <main className="login">
+      {/* Plucky at the laptop, talking to the visitor in three speech bubbles */}
       <section className="login-art" aria-hidden>
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 14 }}>
-          <Mascot size={72} />
-          <div className="preview-card">
-            <div className="subtle" style={{ marginBottom: 6 }}>WHERE와 HAVING · 확인 문제</div>
-            <div className="strong" style={{ fontSize: 14, marginBottom: 10 }}>WHERE 절에는 집계 함수를 조건으로 사용할 수 없다.</div>
-            <div className="opts">
-              <div className="opt right"><span className="k"><Check size={12} /></span>O</div>
-              <div className="opt dim"><span className="k">X</span>X</div>
-            </div>
-            <div className="q-result ok">
-              <span>정답입니다!</span>
-              <span className="chip chip-green">확신하고 맞힘</span>
-            </div>
-          </div>
+        <div className="login-art-head">읽고, 확인하고, 기록하는<br />AI 리딩 파트너</div>
+        <div className="login-bubbles">
+          <p className="login-bubble">모르는 문장은 드래그하면 바로 설명해 줄게요</p>
+          <p className="login-bubble">짧은 확인 문제로 진짜 이해했는지 볼까요?</p>
+          <p className="login-bubble">내 학습 데이터를 한눈에 보아요</p>
         </div>
-        <div className="points">
-          <div className="strong" style={{ fontSize: 17, marginBottom: 10 }}>읽고, 확인하고, 기록하는 AI 리딩 파트너</div>
-          {["모르는 문장은 드래그해서 바로 쉽게 설명받기", "설명 뒤엔 짧은 확인 문제로 진짜 이해했는지 체크", "틀린 이유와 복습 일정이 자동으로 쌓여요"].map((t) => (
-            <div key={t} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: "var(--color-ink-2)", marginTop: 6 }}>
-              <CheckCircle2 size={16} color="var(--color-green)" />
-              {t}
-            </div>
-          ))}
-        </div>
+        <img className="login-plucky" src={laptopUrl} alt="" draggable={false} />
       </section>
 
       <section className="login-form">
@@ -78,6 +73,7 @@ export function Login() {
           {phase === "loading" && (<><LoaderCircle size={18} className="spinner" />로그인하는 중…</>)}
           {phase === "done" && (<><Check size={18} />{name.trim() || DEFAULT_HANDLE}님, 환영해요!</>)}
         </button>
+        {failed && <p className="login-fail" role="alert">로그인하지 못했어요. 다시 시도해 주세요.</p>}
         <p className="sr-only" role="status">{phase === "loading" ? "로그인하는 중" : phase === "done" ? "로그인됐어요. 학습 화면으로 이동해요." : ""}</p>
         <p className="subtle" style={{ marginTop: 14, maxWidth: 380 }}>프로토타입이라 실제 Google 계정 연동 없이 이 브라우저에만 학습 기록이 저장돼요.</p>
       </section>

@@ -4,6 +4,7 @@ import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { CONCEPTS, getMaterial } from "../data/materials";
 import { getQuestion, questionsFor, type Question } from "../data/questions";
 import { Rich } from "../components/Rich";
+import { GradeFail, gradeFailsNow } from "../components/GradeFail";
 import { Mascot } from "../components/Brand";
 import { todayKey, useStore, type Attempt, type ChatMsg, type Confidence } from "../store";
 import { HOME } from "../App";
@@ -49,6 +50,8 @@ type Answer = {
   why?: string;
   /** option index picked (choice questions), to mark 내 답 among the options */
   picked?: number;
+  /** grading failed and the learner moved on (다음 문제로): shown as a grey 채점하지 못했어요 chip */
+  ungraded?: boolean;
 };
 
 /** Answer + explanation for a question, kept apart so the result can show them separately. */
@@ -328,8 +331,15 @@ function ChoiceStep({ item, last, onDone }: { item: Item; last: boolean; onDone:
   const ready = picked !== null && conf !== null;
   const letters = q.type === "OX" ? ["O", "X"] : ["A", "B", "C", "D"];
 
+  // 채점 결과를 받지 못했을 때: the pick stays, the pink note offers 다시 시도 / 다음 문제로, the 다음 button steps aside
+  const [gradeFailed, setGradeFailed] = useState(false);
+  const moveOnUngraded = () => {
+    if (picked === null) return;
+    onDone({ item, qid: q.id, correct: false, confidence: conf ?? "guess", dontKnow: false, ungraded: true, mine: q.options[picked].text, right: q.options[q.answer].text, why: q.explanation, picked }, picked);
+  };
   const next = () => {
     if (picked === null || conf === null) return;
+    if (gradeFailsNow()) { setGradeFailed(true); return; }
     onDone(
       {
         item,
@@ -362,10 +372,14 @@ function ChoiceStep({ item, last, onDone }: { item: Item; last: boolean; onDone:
 
       <ConfRow q="고른 답, 얼마나 확실해요?" off={picked === null} value={conf} onChange={setConf} />
 
-      {/* every step ends with the same full-width CTA as 시작하기, so the next action is always in one place */}
-      <div className="recall-cta">
-        <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={next}>{last ? "결과 보기" : "다음"}</button>
-      </div>
+      {gradeFailed ? (
+        <GradeFail onRetry={next} onNext={moveOnUngraded} nextLabel={last ? "결과 보기" : "다음 문제로"} />
+      ) : (
+        // every step ends with the same full-width CTA as 시작하기, so the next action is always in one place
+        <div className="recall-cta">
+          <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={next}>{last ? "결과 보기" : "다음"}</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -382,8 +396,14 @@ function ExplainStep({ item, last, onDone }: { item: Item; last: boolean; onDone
   const [blank, setBlank] = useState("");
   const [conf, setConf] = useState<Confidence | null>(null);
 
+  const [gradeFailed, setGradeFailed] = useState(false);
+  const moveOnUngraded = () => {
+    const q = scaffold && blankQ ? blankQ : main;
+    onDone({ item, qid: q.id, correct: false, confidence: conf ?? "guess", dontKnow: false, ungraded: true, mine: (scaffold ? blank : text).trim(), ...answerOf(q) }, -1);
+  };
   const submit = () => {
     if (conf === null) return;
+    if (gradeFailsNow()) { setGradeFailed(true); return; }
     if (!scaffold) {
       const pts = main.talk ?? [];
       const hit = pts.filter((p) => p.keywords.some((k) => norm(text).includes(norm(k)))).length;
@@ -449,15 +469,20 @@ function ExplainStep({ item, last, onDone }: { item: Item; last: boolean; onDone
 
       <ConfRow q="쓴 답, 얼마나 확실해요?" off={!written} value={conf} onChange={setConf} />
 
-      <div className="recall-cta">
-        <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={submit}>{last ? "결과 보기" : "다음"}</button>
-        <button className="recall-later" onClick={giveUp}>이 문제 건너뛰기</button>
-      </div>
+      {gradeFailed ? (
+        <GradeFail onRetry={submit} onNext={moveOnUngraded} nextLabel={last ? "결과 보기" : "다음 문제로"} />
+      ) : (
+        <div className="recall-cta">
+          <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={submit}>{last ? "결과 보기" : "다음"}</button>
+          <button className="recall-later" onClick={giveUp}>이 문제 건너뛰기</button>
+        </div>
+      )}
     </div>
   );
 }
 
 function status(a: Answer): { label: string; cls: string; solid: boolean } {
+  if (a.ungraded) return { label: "채점하지 못했어요", cls: "", solid: false };
   if (a.dontKnow) return { label: "틀렸어요", cls: "chip-red", solid: false };
   if (!a.correct) return { label: "틀렸어요", cls: "chip-red", solid: false };
   if (a.confidence !== "sure") return { label: "맞았지만 헷갈렸어요", cls: "chip-amber", solid: false };

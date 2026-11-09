@@ -1,9 +1,11 @@
 import { MessageCircle, X } from "lucide-react";
 import { listDate } from "../lib/listDate";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMaterial, type Material } from "../data/materials";
 import { useStore, type ChatMsg } from "../store";
+import { FailState } from "../components/FailState";
+import { HistoryEmpty } from "../components/HistoryEmpty";
 
 /** A conversation is named by the first thing the learner asked. */
 function titleOf(msgs: ChatMsg[], fallback: string) {
@@ -19,6 +21,9 @@ export function PanelMenu({ material, onClose }: { material: Material; onClose: 
   const nav = useNavigate();
   const closeBtn = useRef<HTMLButtonElement>(null);
   const current = state.chats[material.id] ?? [];
+  // 목록을 불러오지 못했을 때 (새로 필요 3번). The prototype never fails: add ?menu=fail to the address to see it
+  // (다시 시도 then shows the list).
+  const [failed, setFailed] = useState(() => new URLSearchParams(window.location.search).get("menu") === "fail");
 
   useEffect(() => {
     closeBtn.current?.focus();
@@ -36,7 +41,8 @@ export function PanelMenu({ material, onClose }: { material: Material; onClose: 
           <button ref={closeBtn} className="head-icon" aria-label="대화 기록 닫기" onClick={onClose}><X size={16} /></button>
         </div>
         <div className="panel-menu-body">
-          {current.length > 0 && (
+          {failed && <FailState compact title="대화 기록을 불러오지 못했어요" onRetry={() => setFailed(false)} />}
+          {!failed && current.length > 0 && (
             <button className="menu-row on" aria-current="true" onClick={onClose}>
               <MessageCircle size={16} className="menu-ico" />
               <span className="grow">
@@ -46,7 +52,7 @@ export function PanelMenu({ material, onClose }: { material: Material; onClose: 
               <span className="chip chip-green">지금 대화</span>
             </button>
           )}
-          {state.history.map((h) => {
+          {!failed && state.history.map((h) => {
             const m = getMaterial(h.materialId);
             return (
               <button
@@ -67,11 +73,7 @@ export function PanelMenu({ material, onClose }: { material: Material; onClose: 
               </button>
             );
           })}
-          {current.length === 0 && state.history.length === 0 && (
-            <div className="empty" style={{ padding: "32px 20px" }}>
-              아직 대화 기록이 없어요.<br />새 대화를 시작하면 지난 대화가 여기에 쌓여요.
-            </div>
-          )}
+          {!failed && current.length === 0 && state.history.length === 0 && <HistoryEmpty />}
         </div>
       </nav>
     </>

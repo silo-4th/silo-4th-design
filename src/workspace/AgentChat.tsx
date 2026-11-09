@@ -1,6 +1,8 @@
-import { ArrowUp, BookmarkPlus, CheckCircle2, HelpCircle, Lightbulb, RefreshCw, Sparkles, X } from "lucide-react";
+import { ArrowUp, BookmarkPlus, CheckCircle2, HelpCircle, Lightbulb, RefreshCw, RotateCw, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Mascot } from "../components/Brand";
+import { ChatSkeleton } from "../components/ChatSkeleton";
+import { FailState } from "../components/FailState";
 import { Icon3D } from "../components/Icon3D";
 import { QuizCard, tagChipClass, type QuizResult } from "../components/QuizCard";
 import { Rich } from "../components/Rich";
@@ -46,6 +48,29 @@ export function AgentChat({ material, section, command }: { material: Material; 
   const toast = useToast();
   const weak = useWeakConcepts();
   const msgs = state.chats[material.id] ?? [];
+  // 지난 대화를 불러오는 동안 말풍선 모양 뼈대 (새로 필요 1번). In the prototype a unit always opens on a fresh chat and
+  // past ones come back from 대화 기록, so the skeleton shows when a saved conversation is opened there (the list jumps
+  // from empty to several messages at once), ~0.7s. ?chat=loading keeps it on screen for review.
+  const keepLoading = new URLSearchParams(window.location.search).get("chat") === "loading";
+  const [loadingChat, setLoadingChat] = useState(keepLoading);
+  const prevCount = useRef(msgs.length);
+  useEffect(() => {
+    const before = prevCount.current;
+    prevCount.current = msgs.length;
+    if (before === 0 && msgs.length > 1) setLoadingChat(true);
+  }, [msgs.length]);
+  // 지난 대화를 불러오지 못했을 때 (새로 필요 2번): ?chat=fail makes the next opened conversation fail once.
+  // The composer stays usable, so a new question can still be asked.
+  const [failOnce, setFailOnce] = useState(() => new URLSearchParams(window.location.search).get("chat") === "fail");
+  const [chatFailed, setChatFailed] = useState(false);
+  useEffect(() => {
+    if (!loadingChat || keepLoading) return;
+    const t = window.setTimeout(() => {
+      setLoadingChat(false);
+      if (failOnce) { setFailOnce(false); setChatFailed(true); }
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [loadingChat, keepLoading, failOnce]);
   const [input, setInput] = useState("");
   const [quote, setQuote] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
@@ -73,7 +98,42 @@ export function AgentChat({ material, section, command }: { material: Material; 
     const el = scroller.current;
     if (el) requestAnimationFrame(() => el.scrollTo({ top: el.scrollHeight, behavior: "smooth" }));
   }, [msgs.length, busy]);
+  // the skeleton and the failure screen read from the top (not scrolled down like a conversation)
+  useEffect(() => {
+    if (loadingChat || chatFailed) requestAnimationFrame(() => scroller.current?.scrollTo({ top: 0 }));
+  }, [loadingChat, chatFailed]);
 
+  // 답을 받지 못했을 때 (다듬기 1번): the AI bubble turns pale pink with a red line and 다시 시도, which re-asks the same
+  // question without adding it again. The prototype's agent never fails: ?agent=fail makes the next answer fail once.
+  // 답이 오다가 끊겼을 때 (다듬기 2번): the part that arrived stays in a normal bubble (ending in …) and the same pink bubble
+  // follows, saying it stopped; 다시 시도 drops the partial answer and asks again. ?agent=cut makes the next answer stop halfway.
+  const [answerFailed, setAnswerFailed] = useState<{ kind: "fail" | "cut"; prompt: string; quote?: string; history: { role: ChatMsg["role"]; content: string }[] } | null>(null);
+  const demo = new URLSearchParams(window.location.search).get("agent");
+  const failNext = useRef(demo === "fail");
+  const cutNext = useRef(demo === "cut");
+  // a fresh chat (새 대화, another unit) drops a failed answer from the old one
+  useEffect(() => { if (msgs.length === 0) setAnswerFailed(null); }, [msgs.length]);
+  const fetchAnswer = async (prompt: string, q: string | undefined, history: { role: ChatMsg["role"]; content: string }[]) => {
+    setAnswerFailed(null);
+    setBusy(true);
+    try {
+      if (failNext.current) { failNext.current = false; throw new Error("demo failure"); }
+      const full = q ? `다음 문장에 대해: "${q}"\n${prompt}` : prompt;
+      const r = await askAgent({ material, section, prompt: full, history, weak: weak.map((w) => w.name), tone: state.tone });
+      if (cutNext.current) {
+        cutNext.current = false;
+        push({ role: "assistant", content: `${r.text.slice(0, Math.max(40, Math.floor(r.text.length * 0.45))).trimEnd()}…` });
+        setAnswerFailed({ kind: "cut", prompt, quote: q, history });
+        return;
+      }
+      push({ role: "assistant", content: r.text });
+      if (r.concept) lastConcept.current = r.concept;
+    } catch {
+      setAnswerFailed({ kind: "fail", prompt, quote: q, history });
+    } finally {
+      setBusy(false);
+    }
+  };
   const ask = async (prompt: string, q?: string) => {
     if (!prompt.trim() || busy) return;
     const history = msgsRef.current.filter((m) => !m.card).map((m) => ({ role: m.role, content: m.content }));
@@ -81,15 +141,8 @@ export function AgentChat({ material, section, command }: { material: Material; 
     setInput("");
     if (field.current) field.current.style.height = "";
     setQuote(undefined);
-    setBusy(true);
-    try {
-      const full = q ? `다음 문장에 대해: "${q}"\n${prompt}` : prompt;
-      const r = await askAgent({ material, section, prompt: full, history, weak: weak.map((w) => w.name), tone: state.tone });
-      push({ role: "assistant", content: r.text });
-      if (r.concept) lastConcept.current = r.concept;
-    } finally {
-      setBusy(false);
-    }
+    setChatFailed(false);
+    await fetchAnswer(prompt, q, history);
   };
   const quiz = (concept: string, qid?: string, intro?: string) => {
     const q = qid ? getQuestion(qid)! : pickQuestion(concept, state.attempts);
@@ -124,7 +177,14 @@ export function AgentChat({ material, section, command }: { material: Material; 
     <>
       <div className="panel-body" ref={scroller}>
         <div className="chat">
-          {msgs.length === 0 && (
+          {loadingChat && (
+            <>
+              <span className="sr-only" role="status">지난 대화를 불러오고 있어요</span>
+              <ChatSkeleton />
+            </>
+          )}
+          {chatFailed && <FailState title="지난 대화를 불러오지 못했어요" onRetry={() => { setChatFailed(false); setLoadingChat(true); }} />}
+          {!loadingChat && !chatFailed && msgs.length === 0 && (
             <div className="welcome">
               <Mascot size={112} live />
               <p className="welcome-hi">{state.user ? `${state.user.name}님, ` : "반가워요! "}저와 함께 쉽게 공부해요!</p>
@@ -141,7 +201,7 @@ export function AgentChat({ material, section, command }: { material: Material; 
             </div>
           )}
 
-          {msgs.map((m, i) =>
+          {!loadingChat && !chatFailed && msgs.map((m, i) =>
             m.role === "user" ? (
               <div key={i} className="msg user">
                 {m.quote && <span className="quote">{m.quote}</span>}
@@ -167,7 +227,7 @@ export function AgentChat({ material, section, command }: { material: Material; 
                         onAnswered={(r) => onAnswered(i, r)}
                       />
                     ))}
-                  {i === msgs.length - 1 && !busy && (
+                  {i === msgs.length - 1 && !busy && !answerFailed && (
                     <FollowUps
                       msg={m}
                       prev={msgs[i - 1]}
@@ -183,6 +243,27 @@ export function AgentChat({ material, section, command }: { material: Material; 
                 </div>
               </div>
             ),
+          )}
+          {answerFailed && !busy && (
+            <div className={`msg bot ${answerFailed.kind === "cut" ? "msg-follow" : ""}`}>
+              {/* a cut answer continues the bubble above, so no second 플러키 — just the same indent */}
+              <div style={{ flex: "none", marginTop: 2, width: 26 }}>{answerFailed.kind === "fail" && <Mascot size={26} mood="plain" />}</div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="bubble bubble-error" role="alert">
+                  <span className="bubble-error-msg">{answerFailed.kind === "cut" ? "답이 중간에 끊겼어요." : "답을 가져오지 못했어요."}</span>
+                  <button
+                    className="bubble-retry"
+                    onClick={() => {
+                      // a cut answer is dropped and asked again from the start
+                      if (answerFailed.kind === "cut") setMsgs(msgsRef.current.slice(0, -1));
+                      fetchAnswer(answerFailed.prompt, answerFailed.quote, answerFailed.history);
+                    }}
+                  >
+                    <RotateCw size={13} />다시 시도
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
           {busy && (
             <div className="msg bot">
@@ -209,6 +290,7 @@ export function AgentChat({ material, section, command }: { material: Material; 
           ref={field}
           value={input}
           maxLength={1000}
+          disabled={loadingChat}
           placeholder={quote ? "이 문장에 대해 물어보세요" : "궁금한 건 무엇이든 물어보세요"}
           onChange={(e) => {
             setInput(e.target.value);
