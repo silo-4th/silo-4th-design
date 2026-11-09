@@ -694,7 +694,7 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 .quiz-history-row:focus-visible { outline: 2px solid var(--color-green); outline-offset: -2px; }
 /* one round: every question stacked in a single vertical scroll */
 .quiz-history-sub { margin: 0 0 --spacing(4); font-size: 13px; }
-.quiz-history-detail { padding-bottom: --spacing(10); }   /* room after the last question */
+.quiz-history-detail { padding: --spacing(5) 0 --spacing(10); }   /* breathing room under the title bar, and after the last question */
 .quiz-history-q + .quiz-history-q { margin-top: --spacing(6); padding-top: --spacing(6); border-top: 1px solid var(--color-line-2); }
 .quiz-history-q-head { display: flex; align-items: center; gap: --spacing(1.5); }
 .quiz-history-q-head .chip:last-child { margin-left: auto; }
@@ -747,11 +747,15 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 .quiz-home-cta { display: flex; flex-direction: column; gap: --spacing(2); width: 100%; margin-top: --spacing(6); }
 .quiz-cta { margin-top: --spacing(6); }
 /* quiz panel: the 정답 확인 / 다음 문제 bar stays pinned to the bottom when the question runs long (same as the result buttons) */
-.panel-body > .quiz-cta { position: sticky; bottom: -20px; z-index: 2; margin-top: --spacing(3); margin-bottom: -20px; padding: --spacing(3) 0 20px; background: #fff; }
-.panel-body > .quiz-cta::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 16px; background: linear-gradient(rgba(255, 255, 255, 0), #fff); pointer-events: none; }
+.panel-body > .quiz-cta { position: sticky; bottom: -20px; z-index: 2; margin-top: --spacing(1); margin-bottom: -20px; padding: --spacing(3) 0 20px; background: #fff; }
 .quiz-cta .btn { height: 44px; font-size: 15px; font-weight: 600; }
 /* 누를 수 없을 때도 같은 버튼을 흐리게: 빈 상자처럼 보이지 않게 */
 .quiz-cta .btn:disabled { opacity: 0.35; }
+/* 빈칸·서술형: same quiet underlined link as 꺼내 보기, centred under the button */
+.quiz-cta .quiz-skip { display: block; margin: --spacing(2.5) auto 0; color: #9ca1a6; font-weight: 500; }
+.quiz-cta .quiz-skip:hover { color: var(--color-ink); }
+/* with the skip link under the button, the bar needs less space at the bottom */
+.panel-body > .quiz-cta:has(.quiz-skip) { padding-bottom: --spacing(3); }
 .quiz-intro { display: flex; gap: --spacing(2.5); align-items: flex-start; margin-bottom: --spacing(3); }
 .quiz-intro p { margin: 0; padding: --spacing(3) --spacing(3.5); background: var(--color-bg); border-radius: var(--radius-lg); font-size: 14px; line-height: 1.6; color: var(--color-ink-2); }
 .quiz-card { border: 1px solid var(--color-line); border-radius: var(--radius-lg); padding: --spacing(4); background: #fff; box-shadow: var(--shadow-card); width: 100%; }

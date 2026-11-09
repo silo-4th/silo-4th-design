@@ -17,7 +17,7 @@ import { ReviewTab } from "./SidePanels";
 
 type Format = "대화형" | "객관식" | "빈칸" | "랜덤";
 
-const SET_SIZE = 5;
+const SET_SIZE = 3;
 /** Asking this many questions in chat is enough to build a set from the conversation. */
 const ENOUGH_QUESTIONS = 2;
 
@@ -30,9 +30,9 @@ const TYPES: Record<Exclude<Format, "랜덤">, QuestionType[]> = {
   빈칸: ["빈칸"],
 };
 
-/** Five questions spread across the chosen concepts, never repeating one. */
+/** Three questions (one of each format) spread across the chosen concepts, never repeating one. */
 function buildSet(concepts: string[], format: Format, attempts: Attempt[], fallback: string[]) {
-  const order = format === "랜덤" ? shuffle<Exclude<Format, "랜덤">>(["객관식", "빈칸", "대화형", "객관식", "빈칸"]) : Array(SET_SIZE).fill(format);
+  const order = format === "랜덤" ? shuffle<Exclude<Format, "랜덤">>(["객관식", "빈칸", "대화형"]) : Array(SET_SIZE).fill(format);
   const picked: string[] = [];
   const pools = [concepts, fallback];
   for (let i = 0; i < SET_SIZE; i++) {
@@ -147,7 +147,7 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
           {/* questions come from this material's conversation when there is enough of it, otherwise exam-style ones */}
           <p className="muted">
             {chatReady ? (
-              <>AI가 내가 나눈 대화를 바탕으로<br />5문제를 출제해요.</>
+              <>AI가 내가 나눈 대화를 바탕으로<br />{SET_SIZE}문제를 출제해요.</>
             ) : (
               <>AI가 내 대화를 바탕으로 문제를 내요.<br />아직 나눈 대화가 없어서 기출 문제로 준비했어요.</>
             )}
@@ -258,7 +258,9 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
           num={Math.min(i + 1, set.length)}
           onAnswered={(r) => {
             setResults((rs) => [...rs, r]);
-            setAnswered(true);
+            // skipped: no answer to look at, so go straight to the next question
+            if (r.skipped) next();
+            else setAnswered(true);
           }}
         />
         {bar && (
@@ -266,6 +268,7 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
             <button className="btn btn-block btn-dark" disabled={bar.disabled} onClick={bar.run}>
               {bar.label}
             </button>
+            {!answered && bar.skip && <button className="recall-later quiz-skip" onClick={bar.skip}>이 문제 건너뛰기</button>}
           </div>
         )}
       </div>

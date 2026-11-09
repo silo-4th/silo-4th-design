@@ -5,9 +5,9 @@ import { getQuestion, type ErrorTag, type Question } from "../data/questions";
 import { tagFor, useStore, type Confidence, type Source } from "../store";
 
 /** The card's main action, handed to a host that shows it as a fixed button below the card. */
-export type QuizCta = { label: string; disabled: boolean; run: () => void } | null;
+export type QuizCta = { label: string; disabled: boolean; run: () => void; /** 빈칸·서술형: move on without answering (counted as wrong) */ skip?: () => void } | null;
 
-export type QuizResult = { qid: string; correct: boolean; confidence: Confidence; tag?: ErrorTag; why?: string };
+export type QuizResult = { qid: string; correct: boolean; confidence: Confidence; tag?: ErrorTag; why?: string; skipped?: boolean };
 
 const CONF: { v: Confidence; label: string }[] = [
   { v: "sure", label: "확실해요" },
@@ -161,7 +161,8 @@ function ResultBanner({ result }: { result: QuizResult }) {
 /** Small badge at the right of the 해설 title: the error tag (개념 혼동…) in the banner's own colours. */
 function ResultTag({ result }: { result: QuizResult }) {
   // the verdict line already says 맞았어요/틀렸어요, so only a mistake type (개념 혼동…) gets a badge
-  return result.tag ? <span className={`chip ${tagChipClass(result.tag)}`}>{result.tag}</span> : null;
+  // yellow ones (낮은 확신 / 찍어서 맞힘) are left out: the explanation box keeps to the verdict and the 해설
+  return result.tag && tagChipClass(result.tag) !== "chip-amber" ? <span className={`chip ${tagChipClass(result.tag)}`}>{result.tag}</span> : null;
 }
 
 /** The answer's verdict, first thing in the explanation box: ✓ 맞았어요 / ✕ 틀렸어요. */
@@ -197,9 +198,15 @@ function WrittenCard({ q, source, reviewOf, hints, showExplain, className, foote
   const canCheck = stage === "write" && !empty && conf !== null;
   const check = () => { if (canCheck) finish(gradeAs(), conf!); };
   useEffect(() => {
-    onCta?.(stage === "write" ? { label: "정답 확인", disabled: !canCheck, run: check } : null);
+    onCta?.(stage === "write" ? { label: "정답 확인", disabled: !canCheck, run: check, skip } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onCta, stage, text, conf, hintN]);
+
+  // "이 문제 건너뛰기" (same as 꺼내 보기): recorded as a wrong guess, and the host moves straight on to the next question
+  const skip = () => {
+    dispatch({ type: "attempt", attempt: { qid: q.id, correct: false, confidence: "guess", hints: hintN, source, reviewOf }, picked: -1 });
+    onAnswered?.({ qid: q.id, correct: false, confidence: "guess", tag: tagFor(false, "guess", talk ? "개념 부족" : "암기 오류"), skipped: true });
+  };
 
   const finish = (correct: boolean, confidence: Confidence) => {
     dispatch({ type: "attempt", attempt: { qid: q.id, correct, confidence, hints: hintN, source, reviewOf }, picked: -1 });
@@ -364,9 +371,6 @@ function ChoiceCard({ q, source, reviewOf, hints, showExplain, className, footer
             <div className="explain">
               <div className="explain-head"><Verdict result={result} /><ResultTag result={result} /></div>
               {q.explanation}
-              {result.correct && result.confidence !== "sure" && (
-                <div style={{ marginTop: 6, color: "#b26a00" }}>맞혔지만 확신이 낮아서, 내일 비슷한 문제로 한 번 더 확인할게요.</div>
-              )}
             </div>
           )}
           {footer?.(result)}
