@@ -7,7 +7,7 @@ import { useToast } from "../components/Toast";
 import { getMaterial } from "../data/materials";
 import { useStore } from "../store";
 import { AgentChat, type Command } from "../workspace/AgentChat";
-import { Reader, type SelAction } from "../workspace/Reader";
+import { Reader, ReaderSkeleton, type SelAction } from "../workspace/Reader";
 import { PanelMenu } from "../workspace/PanelMenu";
 import { ToneMenu } from "../workspace/ToneMenu";
 import { UnitMenu } from "../workspace/UnitMenu";
@@ -28,6 +28,15 @@ export function Workspace() {
   const [params] = useSearchParams();
   const material = getMaterial(id);
   const { state, dispatch } = useStore();
+  // 단원을 바꾸면 새 본문을 받는 동안 뼈대 화면을 보여 줘요. The prototype has the text at once, so the skeleton stays
+  // ~0.9s just to show the moment; the real service shows it until the body arrives. (Not on the first visit.)
+  const [shownId, setShownId] = useState(id);
+  const switching = shownId !== id;
+  useEffect(() => {
+    if (!switching) return;
+    const t = window.setTimeout(() => setShownId(id), 900);
+    return () => window.clearTimeout(t);
+  }, [id, switching]);
   const toast = useToast();
   const initialTab: Tab = params.get("tab") === "review" ? "review" : "agent";
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -115,13 +124,14 @@ export function Workspace() {
         </header>
 
         <div className="ws-body">
-          <Reader
+          {/* ?loading=1 keeps the body in its loading state (시안 검토용) */}
+          {switching || params.get("loading") ? <ReaderSkeleton material={material} /> : <Reader
             material={material}
             active={active}
             onActive={setActive}
             scrollTo={scrollTo}
             onSelectAction={onSelect}
-          />
+          />}
         </div>
 
         {/* Panel closed: the sprout peeks in from the top-right edge; click it to open the AI panel. */}

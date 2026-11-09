@@ -11,6 +11,38 @@ const SEL_ACTIONS: { k: SelAction; label: string; icon: typeof Sparkles }[] = [
   { k: "note", label: "노트 저장", icon: BookmarkPlus },
 ];
 
+/**
+ * 단원을 바꾼 뒤 새 본문을 받는 동안: the unit's chip and title (already known from the list) show right away, and the
+ * table of contents and body are soft grey bars that shimmer — headings, paragraphs and a table, roughly like the real page.
+ */
+export function ReaderSkeleton({ material }: { material: Material }) {
+  const para = (widths: number[]) => widths.map((w, i) => <i key={i} className="skel skel-line" style={{ width: `${w}%` }} />);
+  return (
+    <div className="reader" aria-busy="true">
+      <nav className="toc" aria-hidden>
+        <div className="toc-inner">
+          {[44, 92, 80, 96, 84].map((w, i) => <span key={i} className="toc-skel"><i className="skel" style={{ width: w }} /></span>)}
+        </div>
+      </nav>
+      <article className="reader-inner">
+        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+          <span className="chip">{material.subject}</span>
+        </div>
+        <h1>{material.title}</h1>
+        <span className="sr-only" role="status">본문을 불러오고 있어요</span>
+        <div className="skel-body" aria-hidden>
+          <div className="skel-para">{para([100, 97, 92, 58])}</div>
+          <i className="skel skel-head" />
+          <div className="skel-para">{para([100, 94, 71])}</div>
+          <i className="skel skel-table" />
+          <i className="skel skel-head" />
+          <div className="skel-para">{para([100, 96, 89, 64])}</div>
+        </div>
+      </article>
+    </div>
+  );
+}
+
 export function Reader({
   material,
   active,

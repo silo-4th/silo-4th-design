@@ -1,5 +1,5 @@
 import { Check, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { CONCEPTS, getMaterial } from "../data/materials";
 import { getQuestion, questionsFor, type Question } from "../data/questions";
@@ -142,6 +142,14 @@ export function Recall() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   // after the last answer the cookie travels to 플러키 at the end of the bar, then the result opens
   const [handoff, setHandoff] = useState(false);
+  // 세트 준비 중 (the real service takes 10s+ to make the 3 questions): the start screen shows the prep steps first.
+  // The prototype's set is ready at once, so the steps tick on a timer (≈4s) just to show the screen.
+  const [prep, setPrep] = useState(0);
+  useEffect(() => {
+    if (prep >= PREP_STEPS.length) return;
+    const t = window.setTimeout(() => setPrep((p) => p + 1), [1200, 1300, 1500][prep]);
+    return () => window.clearTimeout(t);
+  }, [prep]);
 
   // once a day: done or put off today → straight to studying (?again=1 opens it anyway, handy for testing)
   const [params] = useSearchParams();
@@ -185,7 +193,7 @@ export function Recall() {
           </div>
         )}
         <div className="recall-body">
-          {step === "intro" && <Intro items={items} onStart={() => setStep("quiz")} onLater={later} />}
+          {step === "intro" && <Intro items={items} prep={prep < PREP_STEPS.length ? prep : undefined} onStart={() => setStep("quiz")} onLater={later} />}
           {step === "quiz" && (
             isChoice(items[i].question)
               ? <ChoiceStep key={i} item={items[i]} last={i + 1 === items.length} onDone={record} />
@@ -198,9 +206,45 @@ export function Recall() {
   );
 }
 
-function Intro({ items, onStart, onLater }: { items: Item[]; onStart: () => void; onLater: () => void }) {
+const PREP_STEPS = ["지난 공부 기록 살펴보기", "꺼내 볼 개념 3개 고르기", "문제 3개 만들기"];
+
+/** 시안 검토용: 준비 중 → 안내 on a loop (steps tick at 1.6s / 3.4s, ready at 6s, holds 4s, then starts over). */
+export function RecallPrepPreview() {
+  const { state } = useStore();
+  const [items] = useState(() =>
+    pickItems(state.attempts, state.read, state.lastMaterial?.id, (mid) => [
+      ...(state.chats[mid] ?? []),
+      ...state.history.filter((h) => h.materialId === mid).flatMap((h) => h.messages),
+    ])
+  );
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const wait = [1600, 1800, 2600, 4200][step];
+    const t = window.setTimeout(() => setStep((s) => (s >= 3 ? 0 : s + 1)), wait);
+    return () => window.clearTimeout(t);
+  }, [step]);
+  if (!items.length) return <Navigate to={HOME} replace />;
   return (
-    <div className="recall-col">
+    <main className="recall">
+      <section className="recall-frame">
+        <div className="recall-body">
+          <Intro items={items} prep={step < 3 ? step : undefined} onStart={() => setStep(0)} onLater={() => setStep(0)} />
+        </div>
+      </section>
+    </main>
+  );
+}
+
+/**
+ * The 꺼내 먹기 start screen. While the set is still being made (`prep` = steps done, 0–2) the top (플러키, title) is
+ * already the final one; only the box lists the prep steps and the buttons are held back. When it's ready each row turns
+ * into its concept and the buttons rise in — one screen filling in, not a page change.
+ */
+function Intro({ items, prep, onStart, onLater }: { items: Item[]; prep?: number; onStart: () => void; onLater: () => void }) {
+  const ready = prep === undefined;
+  const sorted = [...items].sort((a, b) => Number(a.asked) - Number(b.asked));
+  return (
+    <div className={`recall-col recall-intro ${ready ? "is-ready" : "is-prep"}`} role={ready ? undefined : "status"} aria-live="polite">
       {/* the cookie story starts here: finish all of them and 플러키 gets a cookie (shown on the result) */}
       {/* 플러키 wishing for a cookie (thought bubble) — the reward waiting at the end */}
       {/* gentle bob and blinks; the hungry "o" mouth stays (no smile) */}
@@ -217,19 +261,35 @@ function Intro({ items, onStart, onLater }: { items: Item[]; onStart: () => void
       </span>
       <h1 className="recall-title recall-intro-center">지난번에 공부한 것 중 {items.length}개를 꺼내 볼게요</h1>
       <p className="recall-sub recall-intro-center">{items.length}개를 꺼내 보면 플러키에게 쿠키를 줄 수 있어요</p>
-      {/* an info list (one soft box, thin dividers), not tappable cards — only 시작하기 is an action */}
+      {/* an info list (one soft box, thin dividers), not tappable cards — only 시작하기 is an action.
+          While preparing, the same box and rows show the prep steps; each row then turns into its concept. */}
       <div className="recall-list recall-list--info">
-        {[...items].sort((a, b) => Number(a.asked) - Number(b.asked)).map((it) => (
-          <div key={it.concept} className="recall-row">
-            <span className={`chip ${it.asked ? "chip-green" : "chip-red"}`}>{it.asked ? "물어봄" : "넘어감"}</span>
-            <span className="recall-row-name">{CONCEPTS[it.concept].name}</span>
-            <span className="recall-row-src">{it.materialTitle}</span>
-          </div>
-        ))}
+        {PREP_STEPS.map((label, k) => {
+          const it = sorted[k];
+          if (ready && it) {
+            return (
+              <div key={`c-${it.concept}`} className="recall-row recall-row-in" style={{ animationDelay: `${k * 90}ms` }}>
+                <span className={`chip ${it.asked ? "chip-green" : "chip-red"}`}>{it.asked ? "물어봄" : "넘어감"}</span>
+                <span className="recall-row-name">{CONCEPTS[it.concept].name}</span>
+                <span className="recall-row-src">{it.materialTitle}</span>
+              </div>
+            );
+          }
+          if (ready) return null;
+          const st = k < prep! ? "done" : k === prep ? "now" : "wait";
+          return (
+            <div key={`s-${k}`} className={`recall-row recall-prep-step ${st}`}>
+              <span className="recall-prep-mark" aria-hidden>{st === "done" && <Check size={12} strokeWidth={3} />}</span>
+              {label}
+              <span className="sr-only">{st === "done" ? " 완료" : st === "now" ? " 진행 중" : ""}</span>
+            </div>
+          );
+        })}
       </div>
-      <div className="recall-cta">
-        <button className="btn btn-dark btn-lg btn-block" onClick={onStart}>시작하기</button>
-        <button className="recall-later" onClick={onLater}>내일 꺼내 먹을래요</button>
+      {/* held back (but keeping their space) until the set is ready, so nothing below jumps */}
+      <div className="recall-cta recall-intro-cta" aria-hidden={!ready}>
+        <button className="btn btn-dark btn-lg btn-block" onClick={onStart} tabIndex={ready ? 0 : -1}>시작하기</button>
+        <button className="recall-later" onClick={onLater} tabIndex={ready ? 0 : -1}>내일 꺼내 먹을래요</button>
       </div>
     </div>
   );

@@ -49,6 +49,14 @@ export function AgentChat({ material, section, command }: { material: Material; 
   const [input, setInput] = useState("");
   const [quote, setQuote] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
+  // 첫 글자가 5초 넘게 안 오면 말풍선 아래에 "조금 오래 걸리고 있어요"를 붙여요
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    if (!busy) return;
+    const t = window.setTimeout(() => setSlow(true), 5000);
+    return () => window.clearTimeout(t);
+  }, [busy]);
   const scroller = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
   const msgsRef = useRef(msgs);
@@ -179,7 +187,10 @@ export function AgentChat({ material, section, command }: { material: Material; 
           {busy && (
             <div className="msg bot">
               <Mascot size={26} mood="think" />
-              <div className="bubble"><span className="typing"><i /><i /><i /></span></div>
+              <div className="wait-stack" role="status">
+                <div className="bubble"><span className="typing" aria-label="답을 준비하고 있어요"><i /><i /><i /></span></div>
+                {slow && <span className="wait-note wait-note--below">조금 오래 걸리고 있어요</span>}
+              </div>
             </div>
           )}
         </div>

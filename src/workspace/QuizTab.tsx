@@ -1,6 +1,7 @@
 import { Check, ChevronLeft, House, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Mascot } from "../components/Brand";
+import failArtUrl from "../assets/mascot-fail.webp";
 import mascotUrl from "../assets/mascot.png";
 import quizArtUrl from "../assets/mascot-quiz.webp";
 import quizMouthOpenUrl from "../assets/mascot-quiz-mouth-open.webp";
@@ -112,6 +113,10 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
   const [round, setRound] = useState(0);
   // 지난 문제 보기: the list of questions solved before (the page itself is still to be designed)
   const [history, setHistory] = useState(false);
+  // 문제를 만들지 못했을 때 (5번). The prototype never fails: add ?quiz=fail to the address and the first
+  // 'AI 맞춤 문제 풀기' shows the failure screen (다시 시도 then works).
+  const [failOnce, setFailOnce] = useState(() => new URLSearchParams(window.location.search).get("quiz") === "fail");
+  const [genFailed, setGenFailed] = useState(false);
 
   if (history) return <QuizHistory material={material} onBack={() => setHistory(false)} />;
 
@@ -138,6 +143,21 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
     setPhase("quiz");
   };
 
+  const start = () => {
+    if (failOnce) { setFailOnce(false); setGenFailed(true); return; }
+    setGenFailed(false);
+    begin(pick(), false);
+    setHome(false);
+  };
+
+  if (genFailed) {
+    return (
+      <div className="panel-body" style={{ padding: 20 }}>
+        <FailState title="문제를 만들지 못했어요" onRetry={start} />
+      </div>
+    );
+  }
+
   if (home) {
     return (
       <div className="panel-body" style={{ padding: 20 }}>
@@ -153,7 +173,7 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
             )}
           </p>
           <div className="quiz-home-cta">
-            <button className="btn btn-dark btn-lg btn-block" onClick={() => { begin(pick(), false); setHome(false); }}>
+            <button className="btn btn-dark btn-lg btn-block" onClick={start}>
               AI 맞춤 문제 풀기
             </button>
             <button className="btn btn-lg btn-block" onClick={() => setHistory(true)}>지난 문제 보기</button>
@@ -328,11 +348,35 @@ const statusOf = (a: { correct: boolean; confidence: string }) =>
  * 지난 문제: first a list of past rounds (newest first); opening one shows every question of that round
  * stacked in one vertical scroll — question, 내 답 / 정답, and 해설 — like the result screen.
  */
+/** 불러오기·만들기에 실패했을 때 (퀴즈 탭 5번, 지난 문제 7번): 플러키 holding up a round X sign, a calm title, one 다시 시도. */
+function FailState({ title, onRetry }: { title: string; onRetry: () => void }) {
+  return (
+    <div className="quiz-home quiz-fail" role="alert">
+      <span className="mascot quiz-fail-sign" aria-hidden><img src={failArtUrl} alt="" width={224} height={160} draggable={false} /></span>
+      <h3>{title}</h3>
+      <p className="muted">잠시 뒤 다시 시도해 주세요.</p>
+      <div className="quiz-home-cta">
+        <button className="btn btn-dark btn-lg btn-block" onClick={onRetry}>다시 시도</button>
+      </div>
+    </div>
+  );
+}
+
 function QuizHistory({ material, onBack }: { material: Material; onBack: () => void }) {
   const { state } = useStore();
   const rounds = useMemo(() => quizRounds(state.attempts, material.id), [state.attempts, material.id]);
   const [open, setOpen] = useState<number | null>(null);
   const round = open === null ? null : rounds[open];
+  // 목록을 불러오는 동안 뼈대 줄 (6번), 못 불러오면 실패 화면 (7번). The prototype has the list at once, so the skeleton
+  // shows ~0.7s; add ?history=fail to the address to see the failure screen (다시 시도 then loads normally).
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(() => new URLSearchParams(window.location.search).get("history") === "fail");
+  useEffect(() => {
+    if (!loading) return;
+    const t = window.setTimeout(() => setLoading(false), 700);
+    return () => window.clearTimeout(t);
+  }, [loading]);
+  const retry = () => { setFailed(false); setLoading(true); };
   // opening a round (or going back to the list) always starts from the top, not where the list was scrolled to
   const bodyRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -352,7 +396,27 @@ function QuizHistory({ material, onBack }: { material: Material; onBack: () => v
         <span className="tool-btn-slot" aria-hidden />
       </div>
       <div className="panel-body" ref={bodyRef} style={{ padding: "0 20px 20px" }}>
-        {!round && (
+        {!round && loading && (
+          <>
+            <span className="sr-only" role="status">지난 문제를 불러오고 있어요</span>
+            {/* the list's own rows in grey: title, the 틀림/헷갈림/맞힘 line, the date on the right */}
+            <div className="quiz-history-list" aria-hidden>
+              {[64, 52, 70, 58].map((w, k) => (
+                <div key={k} className="quiz-history-row quiz-history-skel">
+                  <span className="grow">
+                    <i className="skel" style={{ width: `${w}%`, height: 14 }} />
+                    <i className="skel" style={{ width: "38%", height: 11 }} />
+                  </span>
+                  <i className="skel" style={{ width: 38, height: 11 }} />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        {!round && !loading && failed && (
+          <FailState title="목록을 불러오지 못했어요" onRetry={retry} />
+        )}
+        {!round && !loading && !failed && (
           <>
             {rounds.length === 0 ? (
               <p className="muted quiz-history-empty">아직 푼 확인 문제가 없어요. 문제를 풀면 여기에 모여요.</p>
