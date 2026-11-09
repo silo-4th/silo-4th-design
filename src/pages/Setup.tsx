@@ -119,9 +119,10 @@ function DiagnosisResult({ results, onStart }: { results: QuizResult[]; onStart:
   const weak = results.filter((r) => !r.correct || r.confidence !== "sure").map((r) => CONCEPTS[getQuestion(r.qid)!.concept].name);
   const pass = expected >= EXAM.passLine;
 
+  // one column like the other steps: .recall-body is a flex row, so loose children would sit side by side
   return (
-    <>
-            <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "8px 0 20px" }}>
+    <div className="recall-col">
+      <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "8px 0 20px" }}>
         <Mascot size={64} mood={pass ? "smile" : "think"} />
         <h1 style={{ margin: 0 }}>합격 예상 점수는 {expected}점이에요</h1>
       </div>
@@ -153,6 +154,6 @@ function DiagnosisResult({ results, onStart }: { results: QuizResult[]; onStart:
         </p>
       </div>
       <button className="btn btn-primary btn-lg btn-block" style={{ marginTop: 24 }} onClick={onStart}>내 학습으로 가기</button>
-    </>
+    </div>
   );
 }
