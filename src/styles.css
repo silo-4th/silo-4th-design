@@ -872,7 +872,7 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 @keyframes recall-cookie-wobble { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg) translateY(-1px); } }
 /* 플러키 at the end of the bar (centred on the bar's right end) */
 .recall-steps-pluck { position: absolute; right: 12px; top: 10px; line-height: 0; }   /* near the bar's right end, a touch above the cookie bubble line */
-.recall-steps-pluck.got { animation: recall-pluck-got 0.5s 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.recall-steps-pluck.got { animation: recall-pluck-got 0.5s 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
 @keyframes recall-pluck-got { 0% { transform: scale(1); } 45% { transform: scale(1.25) translateY(-3px); } 100% { transform: scale(1.1); } }
 /* last step: the bubble slides onto 플러키 and the cookie is taken (shrinks away into it) */
 .recall-cookie-bubble { transition: opacity 0.25s 0.55s, transform 0.35s 0.5s; }
