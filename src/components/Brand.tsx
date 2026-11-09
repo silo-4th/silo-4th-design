@@ -7,6 +7,7 @@ import shyUrl from "../assets/mascot-shy.png";
 import turnUrl from "../assets/mascot-turn.webp";
 import plainUrl from "../assets/mascot-plain.png";
 import zipUrl from "../assets/mascot-zip.png";
+import logoUrl from "../assets/pluck-logo.svg";
 
 /** Plucky's faces. The resting face is the gentle smile (`mascot.png`); the rest only change the mouth (and blush). `plain` has no mouth. */
 const FACES = { plain: plainUrl, smile: mascotUrl, cat: catUrl, open: openUrl, think: oUrl, wow: grinUrl, shy: shyUrl, zip: zipUrl } as const;
@@ -63,14 +64,11 @@ export function AvatarFace() {
   return <img className="avatar-face" src={plainUrl} alt="" draggable={false} />;
 }
 
+/** Service logo: the bubbly green "Pluck" wordmark (final, used as-is). */
 export function Logo() {
   return (
     <span className="logo">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.4" />
-        <path d="M12 17V10M12 10c0-2.5 2-4 4.5-4 0 2.5-2 4-4.5 4ZM12 12c0-2-1.6-3.2-3.6-3.2 0 2 1.6 3.2 3.6 3.2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      sprout
+      <img src={logoUrl} alt="Pluck" draggable={false} />
     </span>
   );
 }
