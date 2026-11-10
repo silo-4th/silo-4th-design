@@ -1,4 +1,4 @@
-import { ArrowUp, BookmarkPlus, CheckCircle2, HelpCircle, Lightbulb, RefreshCw, RotateCw, Sparkles, X } from "lucide-react";
+import { ArrowUp, BookmarkPlus, CheckCircle2, HelpCircle, Lightbulb, ListChecks, RefreshCw, RotateCw, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Mascot } from "../components/Brand";
 import { ChatSkeleton } from "../components/ChatSkeleton";
@@ -43,7 +43,7 @@ const QUICK = [
 ];
 
 
-export function AgentChat({ material, section, command }: { material: Material; section?: Section; command: Command | null }) {
+export function AgentChat({ material, section, command, onRelated }: { material: Material; section?: Section; command: Command | null; onRelated?: (concept: string) => void }) {
   const { state, dispatch } = useStore();
   const toast = useToast();
   const weak = useWeakConcepts();
@@ -234,6 +234,7 @@ export function AgentChat({ material, section, command }: { material: Material; 
                       concept={concept}
                       onAsk={ask}
                       onQuiz={quiz}
+                      onRelated={onRelated}
                       onNote={(t) => {
                         dispatch({ type: "note", note: { materialId: material.id, sectionId: section?.id ?? "intro", text: t.replace(/\*\*/g, "").slice(0, 300) } });
                         toast("노트에 저장했어요");
@@ -322,6 +323,7 @@ function FollowUps({
   onAsk,
   onQuiz,
   onNote,
+  onRelated,
 }: {
   msg: ChatMsg;
   prev?: ChatMsg;
@@ -329,6 +331,7 @@ function FollowUps({
   onAsk: (p: string) => void;
   onQuiz: (concept: string, qid?: string, intro?: string) => void;
   onNote: (t: string) => void;
+  onRelated?: (concept: string) => void;
 }) {
   if (msg.card) return null;
   // Right after a graded quiz: re-explain, a variant on the same principle, or save to the wrong-answer note.
@@ -348,16 +351,18 @@ function FollowUps({
       </div>
     );
   }
-  return <ExplainActions concept={concept} text={msg.content} onAsk={onAsk} onQuiz={onQuiz} onNote={onNote} />;
+  return <ExplainActions concept={concept} text={msg.content} onAsk={onAsk} onQuiz={onQuiz} onNote={onNote} onRelated={onRelated} />;
 }
 
 /** Actions shown under a plain explanation: move the learner from reading to self-checking. */
-export function ExplainActions({ concept, onAsk, onQuiz, onNote, text }: { concept: string; text: string; onAsk: (p: string) => void; onQuiz: (c: string) => void; onNote: (t: string) => void }) {
+export function ExplainActions({ concept, onAsk, onQuiz, onNote, onRelated, text }: { concept: string; text: string; onAsk: (p: string) => void; onQuiz: (c: string) => void; onNote: (t: string) => void; onRelated?: (concept: string) => void }) {
   return (
     <div className="bot-actions">
       <button onClick={() => onAsk("더 쉽게 설명해줘")}><Sparkles size={12} />더 쉽게</button>
       <button onClick={() => onAsk("예시로 보여줘")}><Lightbulb size={12} />예시 보기</button>
       <button onClick={() => onNote(text)}><BookmarkPlus size={12} />노트 저장</button>
+      {/* 관련 문제 풀어보기 (실제 서비스와 같은 흐름): opens the quiz tab and makes one question on this answer's concept */}
+      {onRelated && <button onClick={() => onRelated(concept)}><ListChecks size={12} />관련 문제 풀어보기</button>}
     </div>
   );
 }

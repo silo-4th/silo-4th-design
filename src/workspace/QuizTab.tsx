@@ -1,4 +1,4 @@
-import { Check, ChevronLeft, House, X } from "lucide-react";
+import { Check, ChevronLeft, House, LoaderCircle, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Mascot } from "../components/Brand";
 import { FailState } from "../components/FailState";
@@ -83,7 +83,7 @@ function useChatConcepts(material: Material) {
   }, [state.chats, state.history, material.id]);
 }
 
-export function QuizTab({ material, section, preset }: { material: Material; section?: Section; preset?: string }) {
+export function QuizTab({ material, section, preset, related, onRelatedDone }: { material: Material; section?: Section; preset?: string; related?: { concept: string; n: number } | null; onRelatedDone?: () => void }) {
   const { state, dispatch } = useStore();
   const weak = useWeakConcepts();
   const chat = useChatConcepts(material);
@@ -133,6 +133,37 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
   }, [loading, material.id]);
   const making = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(making.current), []);
+  const begin = (ids: string[], isRetry: boolean) => {
+    setSet(ids);
+    setRetry(isRetry);
+    setI(0);
+    setResults([]);
+    setAnswered(false);
+    setRound((r) => r + 1);
+    setPhase("quiz");
+  };
+  // 관련 문제 풀어보기 (from the agent tab): the same loading, then one question on that concept; failing uses the same screen
+  const relatedN = useRef(0);
+  useEffect(() => {
+    if (!related || related.n === relatedN.current) return;
+    relatedN.current = related.n;
+    setHistory(false);
+    setReviewing(false);
+    setGenFailed(false);
+    setLoading("making");
+    const t = window.setTimeout(() => {
+      setLoading(null);
+      onRelatedDone?.();
+      if (failOnce) { setFailOnce(false); setGenFailed(true); return; }
+      const q = pickQuestion(related.concept, state.attempts) ?? pickQuestion(aiConcepts[0], state.attempts);
+      if (!q) return;
+      begin([q.id], false);
+      setHome(false);
+    }, 1200);
+    // if this is torn down before it fires (StrictMode remount, leaving the tab), forget it so it runs again
+    return () => { window.clearTimeout(t); relatedN.current = 0; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [related]);
 
   if (history) return <QuizHistory material={material} onBack={() => setHistory(false)} />;
 
@@ -149,15 +180,7 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
     );
   }
 
-  const begin = (ids: string[], isRetry: boolean) => {
-    setSet(ids);
-    setRetry(isRetry);
-    setI(0);
-    setResults([]);
-    setAnswered(false);
-    setRound((r) => r + 1);
-    setPhase("quiz");
-  };
+
 
   const start = () => {
     setGenFailed(false);
@@ -191,13 +214,13 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
       <div className="panel-body" style={{ padding: 20 }}>
         <div className="quiz-home">
           <QuizHomeArt />
-          <h3>확인 문제</h3>
+          <h3>이해했는지 확인해 볼까요?</h3>
           {/* questions come from this material's conversation when there is enough of it, otherwise exam-style ones */}
           <p className="muted">
             {chatReady ? (
               <>AI가 내가 나눈 대화를 바탕으로<br />{SET_SIZE}문제를 출제해요.</>
             ) : (
-              <>AI가 내 대화를 바탕으로 문제를 내요.<br />아직 나눈 대화가 없어서 기출 문제로 준비했어요.</>
+              <>AI가 이 단원의 핵심만 골라 문제를 냈어요.</>
             )}
           </p>
           <div className="quiz-home-cta">
@@ -313,7 +336,8 @@ export function QuizTab({ material, section, preset }: { material: Material; sec
         />
         {bar && (
           <div className="quiz-cta">
-            <button className="btn btn-block btn-dark" disabled={bar.disabled} onClick={bar.run}>
+            <button className={`btn btn-block btn-dark ${bar.busy ? "is-busy" : ""}`} disabled={bar.disabled} aria-busy={bar.busy || undefined} onClick={bar.run}>
+              {bar.busy && <LoaderCircle size={17} className="spinner" />}
               {bar.label}
             </button>
             {!answered && bar.skip && <button className="recall-later quiz-skip" onClick={bar.skip}>이 문제 건너뛰기</button>}

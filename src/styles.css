@@ -207,12 +207,15 @@ code, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; 
 .login { min-height: calc(100vh - 61px); display: grid; grid-template-columns: 1fr 1fr; }
 .login-art { margin: --spacing(6); border-radius: 20px; background: linear-gradient(160deg, #e9fbf3 0%, #d4f5e6 45%, #b9eed6 100%); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: --spacing(9); }
 .login-art .blob { position: absolute; border-radius: 50%; filter: blur(2px); }
-.login-form { display: flex; flex-direction: column; justify-content: center; padding: 0 12%; }
+.login-form { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 --spacing(8); }
+/* one column, one width: every line ends at the same right edge, and the column sits in the middle of its side */
+.login-form > * { width: 100%; max-width: 440px; }
 .login-form h1 { font-size: 28px; line-height: 1.4; margin: 0 0 --spacing(3); letter-spacing: -0.03em; }
-.google-btn { height: 48px; border-radius: var(--radius-sm); border: 1px solid var(--color-line); display: flex; align-items: center; justify-content: center; gap: --spacing(2.5); font-weight: 600; font-size: 15px; background: #fff; }
-.google-btn:hover:not(:disabled) { background: var(--color-bg); }
-.google-btn:disabled { cursor: default; color: var(--color-ink-2); }
-.google-btn.is-done { border-color: var(--color-green); background: var(--color-green-25); color: var(--color-green-600); }
+/* Google sign-in button, Google's own dark theme: fill #131314, 1px #8E918F outline, #E3E3E3 label, full-colour G mark */
+.google-btn { height: 48px; border-radius: var(--radius-sm); border: 1px solid #8e918f; display: flex; align-items: center; justify-content: center; gap: --spacing(2.5); font-weight: 600; font-size: 15px; background: #131314; color: #e3e3e3; }
+.google-btn:hover:not(:disabled) { background: #2a2b2c; }   /* Google's hover: a light 8% white overlay */
+.google-btn:disabled { cursor: default; color: #e3e3e3; opacity: 0.85; }
+.google-btn.is-done { border-color: var(--color-green); background: var(--color-green-25); color: var(--color-green-600); opacity: 1; }
 .google-btn { transition: background 0.2s, border-color 0.2s, color 0.2s; }
 /* 로그인 실패: the same pale pink note as the other failures, right under the button */
 /* 로그아웃 실패: the same pale pink note, small, under the menu item */
@@ -897,6 +900,9 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 .quiz-cta .btn { height: 44px; font-size: 15px; font-weight: 600; }
 /* 누를 수 없을 때도 같은 버튼을 흐리게: 빈 상자처럼 보이지 않게 */
 .quiz-cta .btn:disabled { opacity: 0.35; }
+/* 채점하는 중 / 저장하는 중: the button keeps its full black while it works, with a white spinner */
+.btn.is-busy:disabled { opacity: 1; gap: --spacing(2); }
+.btn.is-busy .spinner { color: #fff; }
 /* 빈칸·서술형: same quiet underlined link as 꺼내 보기, centred under the button */
 .quiz-cta .quiz-skip { display: block; margin: --spacing(2.5) auto 0; color: #9ca1a6; font-weight: 500; }
 .quiz-cta .quiz-skip:hover { color: var(--color-ink); }
@@ -980,10 +986,26 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 .course.soon h4 { color: var(--color-gray); }
 /* login art: headline on top, Plucky's two speech bubbles, Plucky at the laptop filling the bottom (cut by the panel) */
 .login-art { background: #fff7df; border: 0; justify-content: flex-start; align-items: center; padding: --spacing(32) --spacing(10) 0; }
-.login-art-head { align-self: flex-start; margin-left: 2%; text-align: left; font-size: 28px; font-weight: 800; line-height: 1.4; letter-spacing: -0.02em; color: var(--color-ink); }
-.login-bubbles { position: relative; z-index: 1; align-self: flex-start; display: flex; flex-direction: column; align-items: flex-start; gap: --spacing(4); margin: --spacing(8) 0 0 2%; }
-.login-bubble { margin: 0; padding: 13px 20px; border-radius: 18px; background: #fff; font-size: 15px; font-weight: 600; color: var(--color-ink); box-shadow: 0 8px 24px rgba(140, 105, 20, 0.12); }
-.login-plucky { position: absolute; left: 50%; bottom: -7%; width: 61%; max-width: 466px; transform: translateX(-26%); pointer-events: none; user-select: none; }
+/* login column rhythm (8px steps): label→field 8, field and button both 48 tall, field→button 12 */
+.login-form .field { gap: 8px; margin-bottom: 12px; }
+.login-form .input { height: 48px; }
+.login-art-head { align-self: flex-start; margin-left: 2%; text-align: left; font-size: 28px; font-weight: 700; line-height: 1.4; letter-spacing: -0.02em; color: var(--color-ink); }
+.login-bubbles { position: relative; z-index: 1; align-self: flex-start; display: flex; flex-direction: column; align-items: flex-start; gap: --spacing(2.5); margin: --spacing(8) 0 0 2%; }
+.login-bubble { margin: 0; padding: 13px 20px; border-radius: 18px; background: #fff; font-size: 16px; font-weight: 600; color: var(--color-ink); box-shadow: 0 4px 12px rgba(140, 105, 20, 0.09); }
+/* the word "드래그": a see-through brand-green highlighter stroke over the lower half of the word */
+.login-drag { text-decoration: none; padding: 0 3px; margin: 0 -1px; border-radius: 2px; background: linear-gradient(180deg, transparent 64%, rgba(47, 194, 135, 0.38) 64%, rgba(47, 194, 135, 0.38) 92%, transparent 92%); }
+/* a filled brand-green checkbox with a white tick, in front of the quiz line */
+/* chat-style tail on the last bubble only (like a message group), curling out of its bottom-right corner toward Plucky.
+   ::before is the white tail, ::after carves its inner curve with the panel colour. */
+.login-bubble { position: relative; }
+.login-bubbles .login-bubble:last-child::before, .login-bubbles .login-bubble:last-child::after { content: ""; position: absolute; bottom: 0; height: calc(17 * var(--s, 1px)); }
+.login-bubbles .login-bubble:last-child::before { right: calc(-7 * var(--s, 1px)); width: calc(22 * var(--s, 1px)); background: #fff; border-bottom-left-radius: calc(16 * var(--s, 1px)) calc(14 * var(--s, 1px)); }
+.login-bubbles .login-bubble:last-child::after { right: calc(-20 * var(--s, 1px)); width: calc(20 * var(--s, 1px)); background: #fff7df; border-bottom-left-radius: calc(11 * var(--s, 1px)); }
+.login-bubbles .login-bubble:last-child { border-bottom-right-radius: calc(6 * var(--s, 1px)); }
+.login-bubble--icon { display: flex; align-items: flex-start; gap: 8px; }   /* icon sits on the first line even if the text wraps */
+.login-checkbox { flex: none; display: grid; place-items: center; width: 17px; height: 17px; margin-top: 2.5px; border-radius: 5px; background: var(--color-green); color: #fff; }
+.login-emoji { font-size: 1.35em; line-height: 0; vertical-align: -0.12em; margin-left: 3px; }
+.login-plucky { position: absolute; left: 50%; bottom: -7%; width: 66%; max-width: 504px; transform: translateX(-20%); pointer-events: none; user-select: none; }
 
 @media (max-width: 860px) {
   .ws-top { gap: --spacing(2); padding: 0 --spacing(3); }
@@ -996,8 +1018,8 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
   .login-art { margin: --spacing(4); padding: --spacing(8) --spacing(6) 0; min-height: 440px; }
   .login-art-head { font-size: 23px; }
   .login-bubbles { margin-top: --spacing(8); }
-  .login-bubble { font-size: 13.5px; padding: 10px 16px; }
-  .login-plucky { width: min(51%, 277px); bottom: -6%; }
+  .login-bubble { font-size: 14.5px; padding: 10px 16px; }
+  .login-plucky { width: min(55%, 299px); bottom: -6%; }
 }
 
 @media (max-width: 520px) {
@@ -1220,5 +1242,37 @@ button.opt:hover:not(:disabled) { border-color: var(--color-gray-3); }
 @media (max-height: 760px) and (min-width: 861px) {
   .login-art { padding-top: --spacing(20); }
   .login-bubbles { margin-top: --spacing(5); }
-  .login-plucky { width: 52%; }
+  .login-plucky { width: 56%; }
+}
+
+/* 로그인 그림: 큰 화면에서는 글·말풍선·플럭키가 영역 너비에 맞춰 같은 배율로 커지고 줄어든다.
+   기준은 1440x900 화면에서의 영역 너비(672px). 1px of the design = var(--s). */
+.login-stage, .login-copy { display: contents; }
+@media (min-width: 861px) {
+  .login-art { container-type: size; padding: 0; }
+  .login-stage {
+    /* scale with the panel's width; only shrink for height when the panel gets really short (under 600px) */
+    --s: min(calc(100cqw / 672), calc(100cqh / 600));
+    /* Plucky's own scale: grows with the whole panel (width and height) */
+    --si: max(var(--s), min(calc(100cqh / 791), calc(100cqw / 560)));
+    display: block; position: absolute; inset: 0;
+  }
+  /* top line lines up with the sign-in title on the right ("나만의 학습을 시작해 보세요!"), which is centred in its column */
+  /* …but when Plucky gets big, the copy climbs so the last bubble stays clear of Plucky's headset
+     (Plucky's top third, measured from the panel bottom: 100% - 214.3·si; the copy block is 276·s tall) */
+  .login-copy { display: block; position: absolute; left: calc(52 * var(--s));
+    top: min(calc(50% - 145.1px), calc(100% - 214.3 * var(--si) - 280 * var(--s) - 16px)); }
+  .login-stage .login-art-head { margin: 0; font-size: calc(28 * var(--s)); }
+  .login-stage .login-bubbles { margin: calc(32 * var(--s)) 0 0; gap: calc(10 * var(--s)); }
+  .login-stage .login-bubble { padding: calc(13 * var(--s)) calc(20 * var(--s)); border-radius: calc(18 * var(--s)); font-size: calc(16 * var(--s));
+    box-shadow: 0 calc(4 * var(--s)) calc(12 * var(--s)) rgba(140, 105, 20, 0.09); }
+  .login-stage .login-bubble--icon { gap: calc(8 * var(--s)); }
+  .login-stage .login-checkbox { width: calc(17 * var(--s)); height: calc(17 * var(--s)); margin-top: calc(2.5 * var(--s)); border-radius: calc(5 * var(--s)); }
+  .login-stage .login-checkbox svg { width: calc(12 * var(--s)); height: calc(12 * var(--s)); }
+  .login-stage .login-emoji { margin-left: calc(3 * var(--s)); }
+  /* copy hangs from the top-left, Plucky sits on the bottom-right edge (cut by the panel the same way) */
+  /* Plucky grows with the whole panel (width and height), so a taller panel gets a bigger Plucky too */
+  .login-stage .login-plucky {
+    left: auto; right: calc(-17.3 * var(--si)); top: auto; bottom: calc(-50.9 * var(--si)); width: calc(408 * var(--si)); max-width: none; transform: none;
+  }
 }

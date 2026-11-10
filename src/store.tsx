@@ -49,7 +49,7 @@ export type SavedChat = { id: string; materialId: string; at: number; messages: 
 
 type State = {
   /** handle = the ID shown next to the avatar */
-  user: { name: string; handle?: string } | null;
+  user: { name: string; handle?: string; email?: string } | null;   // email: the linked Google account, once real sign-in exists
   setup: { dailyMinutes: number; diagnosed: boolean } | null;
   attempts: Attempt[];
   reviews: Review[];

@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, LoaderCircle, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { CONCEPTS, getMaterial } from "../data/materials";
@@ -337,9 +337,16 @@ function ChoiceStep({ item, last, onDone }: { item: Item; last: boolean; onDone:
     if (picked === null) return;
     onDone({ item, qid: q.id, correct: false, confidence: conf ?? "guess", dontKnow: false, ungraded: true, mine: q.options[picked].text, right: q.options[q.answer].text, why: q.explanation, picked }, picked);
   };
+  // 채점하는 중: the button turns into a spinner + 채점하는 중… for a moment (the real service: until the result is back)
+  const [grading, setGrading] = useState(false);
   const next = () => {
+    if (picked === null || conf === null || grading) return;
+    setGradeFailed(false);
+    setGrading(true);
+    window.setTimeout(() => { setGrading(false); if (gradeFailsNow()) { setGradeFailed(true); return; } submitChoice(); }, 450);
+  };
+  const submitChoice = () => {
     if (picked === null || conf === null) return;
-    if (gradeFailsNow()) { setGradeFailed(true); return; }
     onDone(
       {
         item,
@@ -377,7 +384,11 @@ function ChoiceStep({ item, last, onDone }: { item: Item; last: boolean; onDone:
       ) : (
         // every step ends with the same full-width CTA as 시작하기, so the next action is always in one place
         <div className="recall-cta">
-          <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={next}>{last ? "결과 보기" : "다음"}</button>
+          {grading ? (
+            <button className={`btn btn-dark btn-block is-busy ${last ? "btn-lg" : "recall-next"}`} disabled aria-busy="true"><LoaderCircle size={17} className="spinner" />채점하는 중…</button>
+          ) : (
+            <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={next}>{last ? "결과 보기" : "다음"}</button>
+          )}
         </div>
       )}
     </div>
@@ -401,9 +412,16 @@ function ExplainStep({ item, last, onDone }: { item: Item; last: boolean; onDone
     const q = scaffold && blankQ ? blankQ : main;
     onDone({ item, qid: q.id, correct: false, confidence: conf ?? "guess", dontKnow: false, ungraded: true, mine: (scaffold ? blank : text).trim(), ...answerOf(q) }, -1);
   };
+  const [grading, setGrading] = useState(false);
   const submit = () => {
+    if (conf === null || grading) return;
+    setGradeFailed(false);
+    setGrading(true);
+    // an explanation is graded by AI, so it takes a little longer than a fixed answer
+    window.setTimeout(() => { setGrading(false); if (gradeFailsNow()) { setGradeFailed(true); return; } grade(); }, scaffold ? 450 : 1000);
+  };
+  const grade = () => {
     if (conf === null) return;
-    if (gradeFailsNow()) { setGradeFailed(true); return; }
     if (!scaffold) {
       const pts = main.talk ?? [];
       const hit = pts.filter((p) => p.keywords.some((k) => norm(text).includes(norm(k)))).length;
@@ -473,8 +491,12 @@ function ExplainStep({ item, last, onDone }: { item: Item; last: boolean; onDone
         <GradeFail onRetry={submit} onNext={moveOnUngraded} nextLabel={last ? "결과 보기" : "다음 문제로"} />
       ) : (
         <div className="recall-cta">
-          <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={submit}>{last ? "결과 보기" : "다음"}</button>
-          <button className="recall-later" onClick={giveUp}>이 문제 건너뛰기</button>
+          {grading ? (
+            <button className={`btn btn-dark btn-block is-busy ${last ? "btn-lg" : "recall-next"}`} disabled aria-busy="true"><LoaderCircle size={17} className="spinner" />채점하는 중…</button>
+          ) : (
+            <button className={`btn btn-dark btn-block ${last ? "btn-lg" : "recall-next"}`} disabled={!ready} onClick={submit}>{last ? "결과 보기" : "다음"}</button>
+          )}
+          {!grading && <button className="recall-later" onClick={giveUp}>이 문제 건너뛰기</button>}
         </div>
       )}
     </div>

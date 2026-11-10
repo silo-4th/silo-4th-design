@@ -30,6 +30,8 @@ export function UserMenu() {
 
   if (!state.user) return null;
   const handle = state.user.handle ?? DEFAULT_HANDLE;
+  // the linked Google account; Google sign-in is still a mock, so an example address stands in until it is real
+  const email = state.user.email ?? "plucky@gmail.com";
 
   return (
     <div className="user-menu" ref={box}>
@@ -49,7 +51,7 @@ export function UserMenu() {
             <span className="avatar"><AvatarFace /></span>
             <span>
               <b>{handle}</b>
-              <span className="user-pop-sub">로그인됨 · 학습 기록이 이 브라우저에 저장돼요</span>
+              <span className="user-pop-sub">{email}</span>
             </span>
           </div>
           <button

@@ -46,6 +46,8 @@ export function Workspace() {
   const [scrollTo] = useState(() => (params.get("section") ? { id: params.get("section")!, n: 0 } : null));
   const [command, setCommand] = useState<Command | null>(null);
   const [reviewPreset] = useState<string | undefined>();
+  // 관련 문제 풀어보기 from the agent tab: switch to the quiz tab and hand it the concept (n makes each press a new request)
+  const [related, setRelated] = useState<{ concept: string; n: number } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const n = useRef(0);
 
@@ -186,11 +188,11 @@ export function Workspace() {
                   {hasChat && <ToneMenu />}
                 </div>
               </div>
-              <AgentChat material={material} section={section} command={command} />
+              <AgentChat material={material} section={section} command={command} onRelated={(concept) => { setRelated((r) => ({ concept, n: (r?.n ?? 0) + 1 })); setTab("review"); }} />
               {menuOpen && <PanelMenu material={material} onClose={() => setMenuOpen(false)} />}
             </>
           )}
-          {tab === "review" && <QuizTab key={reviewPreset ?? "quiz"} material={material} section={section} preset={reviewPreset} />}
+          {tab === "review" && <QuizTab key={reviewPreset ?? "quiz"} material={material} section={section} preset={reviewPreset} related={related} onRelatedDone={() => setRelated(null)} />}
         </aside>
       )}
     </div>
