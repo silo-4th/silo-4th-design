@@ -2,7 +2,7 @@ import { Check, ChevronLeft, House, LoaderCircle, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Mascot } from "../components/Brand";
 import { FailState } from "../components/FailState";
-import { LoadingCloud } from "../components/LoadingState";
+import { QuizSkeleton } from "../components/QuizSkeleton";
 import mascotUrl from "../assets/mascot.png";
 import quizArtUrl from "../assets/mascot-quiz.webp";
 import quizMouthOpenUrl from "../assets/mascot-quiz-mouth-open.webp";
@@ -120,11 +120,13 @@ export function QuizTab({ material, section, preset, related, onRelatedDone }: {
   // 'AI 맞춤 문제 풀기' shows the failure screen (다시 시도 then works).
   const [failOnce, setFailOnce] = useState(() => new URLSearchParams(window.location.search).get("quiz") === "fail");
   const [genFailed, setGenFailed] = useState(false);
-  // 로딩 (확인만 1번): the shared grey-bubble loading while a set is being made, or while a saved set comes back after a
+  // 로딩 (확인만 1번): the quiz-card skeleton while a set is being made, or while a saved set comes back after a
   // reload. The prototype has both at once, so they show ~1.2s / ~0.6s; the real service shows them until the set arrives.
   // "resuming" only once per page load (a reload), not every time the learner switches back to this tab
+  // ?quiz=loading keeps the 문제를 만드는 중 skeleton on screen (for checking the design)
+  const holdLoading = new URLSearchParams(window.location.search).get("quiz") === "loading";
   const [loading, setLoading] = useState<null | "making" | "resuming">(() =>
-    !preset && saved && saved.phase === "quiz" && resumeAt > 0 && resumeAt < saved.set.length && !RESUMED.has(material.id) ? "resuming" : null,
+    holdLoading ? "making" : !preset && saved && saved.phase === "quiz" && resumeAt > 0 && resumeAt < saved.set.length && !RESUMED.has(material.id) ? "resuming" : null,
   );
   useEffect(() => {
     if (loading !== "resuming") return;
@@ -196,7 +198,7 @@ export function QuizTab({ material, section, preset, related, onRelatedDone }: {
   if (loading) {
     return (
       <div className="panel-body" style={{ padding: 20 }}>
-        <LoadingCloud label={loading === "making" ? "문제를 만들고 있어요" : "풀던 문제를 불러오고 있어요"} />
+        <QuizSkeleton label={loading === "making" ? "문제를 만들고 있어요" : "풀던 문제를 불러오고 있어요"} />
       </div>
     );
   }
